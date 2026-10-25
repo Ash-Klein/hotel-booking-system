@@ -11,6 +11,11 @@ verify_report.txt
 _*.txt
 *.py
 
+# 需求分析报告（随实验压缩包提交，不入库，以保持仓库 HEAD 与 lab1-final 一致）
+report.md
+report.docx
+report.pdf
+
 # Office 原始文档与中间产物
 *.docx
 
