@@ -1,14 +1,17 @@
-# 中间工作文件（不入库，内容已完整收录在 chat.txt 中）
+# 中间工作文件（最终内容已完整收录在 chat.txt / requirements.md 中，不入库）
 访谈原文.txt
 chat_part1.md
+chat_part3.md
+int02.md
 requirements_v1_raw.md
-build_chat.py
-dump_docx.py
 ai_prompt_v1.txt
 跟进沟通清单-INT-02.md
 甲方访谈提纲.md
+verify_report.txt
+_*.txt
+*.py
 
-# Office 原始文档
+# Office 原始文档与中间产物
 *.docx
 
 # 提交压缩包
