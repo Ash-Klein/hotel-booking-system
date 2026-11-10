@@ -40,7 +40,12 @@ lab2/tools/*.jar
 !lab2/tools/*.py
 !lab2/tools/*.cmd
 !lab2/tools/*.ps1
+!lab2/ui/*.py
 
 # 实验二提交压缩包与他人作业
 lab2/实验2_*.zip
 lab2/*.zip
+
+# Python 缓存
+__pycache__/
+*.pyc
