@@ -62,6 +62,7 @@ Manager --> UC_Inv
 Manager --> UC_Close
 Manager --> UC_Lock
 Manager --> UC_Approve
+Manager --> UC_Query
 Manager --> UC_Report
 
 Finance --> UC_Recon
