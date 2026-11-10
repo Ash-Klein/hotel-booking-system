@@ -42,11 +42,14 @@ package "库存与价格  M2" {
     - total : int
     - sold : int
     - locked : int
+    - groupLocked : int
     - version : int
     + available() : int
     + reserve(qty : int) : boolean
     + release(qty : int) : void
     + confirm(qty : int) : void
+    + lockGroup(qty : int) : boolean
+    + releaseGroup(qty : int) : void
   }
   class "每日价格 DailyPrice" as DailyPrice {
     - bizDate : Date
@@ -62,6 +65,7 @@ package "库存与价格  M2" {
     - startDate : Date
     - endDate : Date
     - qty : int
+    - releaseAt : DateTime
     - status : String
   }
 }
@@ -124,8 +128,15 @@ end note
 
 note right of DailyInventory
   <b>唯一键</b> (hotelId, roomTypeId, bizDate)
-  available = total - sold - locked ≥ 0
+  available = total - sold - locked - groupLocked ≥ 0
+  订单锁房与协议锁房分开计量，避免超时释放误放协议房
   并发以条件更新 + version 乐观锁保证
+end note
+
+note bottom of GroupLock
+  按入住晚逐日累加 DailyInventory.groupLocked；
+  到期由调度任务释放，协议客户实际下单时
+  groupLocked - n、sold + n，转为正式订单（REQ-008）
 end note
 
 note bottom of OrderItem

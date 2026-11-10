@@ -30,7 +30,7 @@ A -> BOOK : 提交订单（房型 X，1 间）
 B -> BOOK : 提交订单（房型 X，1 间）
 BOOK -> BOOK : 幂等校验（订单号 + 请求号）
 BOOK -> INV : reserve(订单 A，1)
-INV -> DB : UPDATE daily_inventory\nSET locked = locked + 1\nWHERE total - sold - locked >= 1
+INV -> DB : UPDATE daily_inventory\nSET locked = locked + 1\nWHERE total - sold - locked - group_locked >= 1
 DB --> INV : 影响行数 = 1
 INV --> BOOK : 预占成功
 BOOK --> A : 锁房 15 分钟，跳转支付
@@ -55,6 +55,8 @@ alt 15 分钟内未支付
 end
 
 note over DB
+  本例假设当日 group_locked = 0；若存在协议锁房，
+  同一条件会先扣除协议占用，剩余可售才参与抢房。
   数据库条件更新保证只有一单成功；
   Redis 仅作热点缓存与预占加速（见组件图），
   不作为最终判定依据

@@ -80,11 +80,14 @@ end note
 
 note left of M2
   防超卖唯一事实源：
-  条件更新 + 唯一约束兜底
+  条件更新 + 唯一约束兜底。
+  协议锁房写入 group_lock，按入住晚累加
+  DailyInventory.groupLocked；到期由 S3 调度释放
 end note
 
 legend bottom
   层次：上 接入层 ｜ 中 应用服务（M1–M7，对应 7 个业务模块）｜ 下 基础设施
+  支撑能力 S1 通知 / S2 导出 / S3 定时调度（订单超时、协议锁房到期）未单独画组件，部署见图3-7
 endlegend
 
 @enduml

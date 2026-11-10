@@ -66,4 +66,9 @@ note bottom of EXCEPTION
   处置结果必须留痕（REQ-027、REQ-030）
 end note
 
+legend bottom
+  协议锁房不是订单状态，不进入本状态机：单独管理"生效 → 到期释放 / 转正式订单"，
+  其占用计入 DailyInventory.groupLocked（REQ-008）
+endlegend
+
 @enduml
