@@ -46,6 +46,12 @@ lab2/tools/*.jar
 lab2/实验2_*.zip
 lab2/*.zip
 
+# 实验二报告生成与提交物（PDF/图片随压缩包提交，不入库）
+.dsh-office-*/
+实验2_*.zip
+实验2_241220053_黄若希/
+!lab2/report/*.py
+
 # Python 缓存
 __pycache__/
 *.pyc
