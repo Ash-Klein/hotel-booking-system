@@ -12,12 +12,13 @@ sys.path.insert(0, os.path.join(ROOT, "tools", "pylibs"))
 OUT = os.path.join(ROOT, "UI界面")
 os.makedirs(OUT, exist_ok=True)
 
-from screens_mobile import screen01, screen02, screen03, screen04, screen05
-from screens_desktop import screen06, screen07, screen08, screen09, screen10, screen11
+from screens_mobile import screen01, screen02, screen02a, screen03, screen04, screen05
+from screens_desktop import screen06, screen06a, screen06b, screen07, screen08, screen09, screen10, screen11
 
 MOBILE = [
     ("界面01-客人端-首页选店.png", screen01),
-    ("界面02-客人端-房型报价.png", screen02),
+    ("界面02-客人端-选房型.png", screen02),
+    ("界面02A-客人端-房型详情.png", screen02a),
     ("界面03-客人端-填单锁房.png", screen03),
     ("界面04-客人端-支付.png", screen04),
     ("界面05-客人端-订单改退.png", screen05),
@@ -25,6 +26,8 @@ MOBILE = [
 
 DESKTOP = [
     ("界面06-门店端-今日工作台.png", screen06),
+    ("界面06A-门店端-异常处置.png", screen06a),
+    ("界面06B-门店端-停业与支付异常.png", screen06b),
     ("界面07-门店端-库存房价.png", screen07),
     ("界面08-门店端-订单入住.png", screen08),
     ("界面09-集团端-门店房型.png", screen09),

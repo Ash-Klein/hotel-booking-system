@@ -4,6 +4,12 @@
 from theme import C
 from widgets import Canvas
 
+# 一单一房型：本流程演示同房型 2 间、2 晚，总价 = 单价 × 晚数 × 间数
+NIGHTS = 2
+ROOMS = 2
+RATE = 568
+TOTAL = RATE * NIGHTS * ROOMS
+
 
 def photo(c, x, y, w, h, r=12, c1="#8FA9C9", c2="#D9E4F2"):
     c.gradient(x, y, w, h, c1, c2, r=r)
@@ -32,7 +38,7 @@ def screen01(path):
     c.text(38, 198, "上海", 18, C["text"], True)
     c.d.line([c.px(82), c.px(207), c.px(88), c.px(213), c.px(94), c.px(207)],
              fill=C["muted"], width=c.px(1.6))
-    c.text(332, 200, "2 晚", 10, C["muted"], False, "ra")
+    c.text(332, 200, "2 晚 · 2 位", 10, C["muted"], False, "ra")
 
     c.line(38, 232, 352, 232, C["line"], 1)
     c.text(38, 246, "入住门店", 9, C["faint"])
@@ -74,7 +80,13 @@ def screen01(path):
     c.save(path)
 
 
+def chevron(c, x, y, s=6, color=C["faint"], w=1.6):
+    c.d.line([c.px(x), c.px(y), c.px(x + s), c.px(y + s), c.px(x), c.px(y + 2 * s)],
+             fill=color, width=c.px(w))
+
+
 def screen02(path):
+    """房型列表：只选房型，不选间数、不显示总价。"""
     c = Canvas(390, 844, 2)
     header(c, 168)
     c.icon_back(20, 52, 20, "#FFFFFF")
@@ -84,12 +96,12 @@ def screen02(path):
         c.icon_star(171 + i * 13, 108, 11, C["gold"])
     c.text(242, 108, "4.8 / 5", 10, "#E8D9A8")
 
-    # 日期条
+    # 日期条：只确认日期，间数留到 02A
     c.rrect(16, 146, 358, 56, 12, C["card"], shadow=True)
     c.text(30, 160, "11月14日 周六", 12, C["text"], True)
     c.text(180, 164, "→", 14, C["faint"])
     c.text(206, 160, "11月16日 周一", 12, C["text"], True)
-    c.text(30, 180, "2 晚 · 2 位成人 · 1 间", 10, C["muted"])
+    c.text(30, 180, f"{NIGHTS} 晚", 10, C["muted"])
     c.text(344, 170, "修改", 11, C["primary"], False, "ra")
 
     chips = ["含早", "大床", "可取消"]
@@ -97,42 +109,90 @@ def screen02(path):
     for i, s in enumerate(chips):
         ww = c.pill(xx, 218, s, 10, C["primary"], C["blue_bg"], 9, 24)
         xx += ww + 8
-    c.text(370, 226, "2 位 · 1 间", 10, C["primary"], False, "ra")
-    c.chevron_down(374, 229, 7, C["primary"])
+    c.text(370, 226, "3 种房型", 10, C["muted"], False, "ra")
 
+    # 房型卡：整卡可点，进入 02A 详情
     rooms = [
-        ("高级大床房", "28㎡ · 1.8m 大床 · 含早", "568", "仅剩 2 间", "可取消", "#8FA9C9", "#D9E4F2"),
-        ("行政套房", "46㎡ · 1.8m 大床 · 含早", "898", "仅剩 1 间", "含双早", "#A9B8C9", "#E6EEF7"),
+        ("高级大床房", "28㎡ · 1.8m 大床 · 含早", "568", "仅剩 3 间", "可取消", "#8FA9C9", "#D9E4F2"),
+        ("高级双床房", "30㎡ · 1.2m 双床 · 含早", "528", "仅剩 5 间", "可取消", "#A9B8C9", "#E6EEF7"),
+        ("行政套房", "46㎡ · 1.8m 大床 · 含双早", "898", "仅剩 1 间", "可取消", "#9BB0C9", "#DCE6F2"),
     ]
     yy = 258
     for name, desc, price, left, tag, c1, c2 in rooms:
-        c.rrect(16, yy, 358, 190, 14, C["card"], shadow=True)
-        photo(c, 16, yy, 108, 190, 14, c1, c2)
-        c.text(138, yy + 16, name, 16, C["text"], True)
-        c.text(138, yy + 42, desc, 10, C["muted"], maxw=220)
-        c.pill(138, yy + 62, left, 9, C["amber"], C["amber_bg"], 6, 18)
-        c.pill(138 + c.text_w(left, 9) + 18, yy + 62, tag, 9, C["green"], C["green_bg"], 6, 18)
-        c.text(138, yy + 96, "¥", 10, C["red"])
-        c.text(148, yy + 88, price, 22, C["red"], True)
-        c.text(148 + c.text_w(price, 22, True) + 4, yy + 99, "/晚", 10, C["muted"])
-        c.text(138, yy + 124, "2 晚总价 ¥" + str(int(price) * 2), 11, C["text"])
-        c.button(274, yy + 144, 84, 30, "订", 12, C["primary"], "#FFFFFF", 8)
-        yy += 204
+        c.rrect(16, yy, 358, 160, 14, C["card"], shadow=True)
+        photo(c, 16, yy, 100, 160, 14, c1, c2)
+        c.text(132, yy + 14, name, 16, C["text"], True)
+        c.text(132, yy + 40, desc, 10, C["muted"], maxw=210)
+        c.pill(132, yy + 60, left, 9, C["amber"], C["amber_bg"], 6, 18)
+        c.pill(132 + c.text_w(left, 9) + 16, yy + 60, tag, 9, C["green"], C["green_bg"], 6, 18)
+        c.text(132, yy + 94, "¥", 10, C["red"])
+        c.text(142, yy + 86, price, 22, C["red"], True)
+        c.text(142 + c.text_w(price, 22, True) + 4, yy + 97, "起/晚", 9, C["muted"])
+        chevron(c, 350, yy + 74)
+        yy += 176
 
-    # 住客点评
-    c.rrect(16, 672, 358, 90, 14, C["card"], shadow=True)
-    c.text(30, 686, "住客点评", 12, C["text"], True)
-    c.text(30, 704, "4.8", 20, C["gold"], True)
-    c.text(60, 712, "/ 5 · 312 条真实点评", 9, C["muted"])
-    for label, tx in [("位置 96%", 30), ("服务 94%", 122), ("卫生 95%", 214)]:
-        c.pill(tx, 732, label, 9, C["primary"], C["blue_bg"], 7, 20)
+    c.text(195, 796, "价格为每晚起价，点选房型查看详情", 9, C["faint"], False, "ma")
+    c.save(path)
 
-    # 底部
+
+def screen02a(path):
+    """房型详情：定间数、看明细、确认下单。"""
+    c = Canvas(390, 844, 2)
+    c.gradient(0, 0, 390, 96, C["primary"], C["primary_soft"])
+    c.status_bar(dark=True)
+    c.icon_back(20, 52, 20, "#FFFFFF")
+    c.text(195, 62, "房型详情", 17, "#FFFFFF", True, "ma")
+
+    photo(c, 0, 96, 390, 180, 0, "#8FA9C9", "#D9E4F2")
+    c.pill(308, 240, "28㎡", 9, C["text"], "#FFFFFF", 7, 20)
+
+    c.rect(0, 276, 390, 506, "#FFFFFF")
+    c.text(24, 288, "高级大床房", 22, C["text"], True)
+    c.text(24, 322, "1.8m 大床 · 含早 · 可取消", 10, C["muted"])
+    c.text(24, 346, "¥", 12, C["red"])
+    c.text(34, 338, "568", 30, C["red"], True)
+    c.text(34 + c.text_w("568", 30, True) + 4, 354, "/晚", 10, C["muted"])
+    c.pill(300, 344, "仅剩 3 间", 9, C["amber"], C["amber_bg"], 6, 20)
+
+    c.line(16, 384, 374, 384, C["line"], 1)
+    c.text(24, 396, "入住日期", 9, C["faint"])
+    c.text(24, 412, "11月14日 - 11月16日 · 2 晚", 13, C["text"], True)
+    c.text(344, 398, "修改", 10, C["primary"], False, "ra")
+
+    c.line(16, 446, 374, 446, C["line"], 1)
+    c.text(24, 458, "间数", 13, C["text"], True)
+    c.text(24, 480, "最多 3 间", 9, C["muted"])
+    bx = 256
+    for i, (lab, fill, fg) in enumerate(
+        [("−", C["card"], C["primary"]), (str(ROOMS), C["card"], C["text"]), ("+", C["blue_bg"], C["primary"])]
+    ):
+        c.rrect(bx + i * 34, 454, 32, 32, 8, fill,
+                outline=C["primary"] if i == 2 else C["border"], width=1.2)
+        c.text(bx + i * 34 + 16, 470, lab, 14, fg, True, "mm")
+
+    # 价格明细
+    c.rrect(16, 520, 358, 118, 12, C["bg"])
+    c.text(32, 534, "价格明细", 12, C["text"], True)
+    c.text(32, 560, f"房费（¥{RATE} × {NIGHTS} 晚 × {ROOMS} 间）", 10, C["muted"])
+    c.text(358, 560, f"¥{TOTAL}", 10, C["text"], False, "ra")
+    c.text(32, 582, "服务费", 10, C["muted"])
+    c.text(358, 582, "¥0", 10, C["text"], False, "ra")
+    c.line(32, 600, 358, 600, C["border"], 1)
+    c.text(32, 608, "合计", 11, C["text"], True)
+    c.text(358, 604, f"¥{TOTAL}", 18, C["red"], True, "ra")
+
+    # 预订须知
+    c.rrect(16, 654, 358, 86, 12, C["blue_bg"])
+    c.text(32, 668, "预订须知", 11, C["primary"], True)
+    c.text(32, 686, "入住 14:00 后 · 退房次日 12:00 前", 9, C["muted"])
+    c.text(32, 702, "入住前 24 小时可免费取消，之后扣首晚房费", 9, C["muted"])
+    c.text(32, 720, "需要其他房型？请分开下单", 9, C["amber"])
+
     c.rect(0, 782, 390, 62, "#FFFFFF")
     c.line(0, 782, 390, 782, C["border"], 1)
-    c.text(20, 798, "2 晚总价", 10, C["muted"])
-    c.text(20, 812, "¥1136", 20, C["red"], True)
-    c.button(230, 794, 140, 40, "去预订", 14, C["primary"], "#FFFFFF", 10)
+    c.text(20, 790, "合计", 9, C["muted"])
+    c.text(20, 804, f"¥{TOTAL}", 20, C["red"], True)
+    c.button(220, 794, 150, 42, "确认下单", 14, C["primary"], "#FFFFFF", 10)
     c.save(path)
 
 
@@ -151,7 +211,7 @@ def screen03(path):
     # 入住人
     c.rrect(16, 170, 358, 232, 14, C["card"], shadow=True)
     c.text(32, 188, "入住人信息", 14, C["text"], True)
-    c.text(358, 190, "1 间房", 10, C["muted"], False, "ra")
+    c.text(358, 190, f"{ROOMS} 间房", 10, C["muted"], False, "ra")
     fields = [("姓名", "黄若希"), ("手机号", "138****0053"), ("到店时间", "预计 18:00 前")]
     yy = 218
     for label, value in fields:
@@ -159,7 +219,7 @@ def screen03(path):
         c.text(32, yy + 16, value, 13, C["text"])
         c.line(32, yy + 44, 358, yy + 44, C["line"], 1)
         yy += 50
-    c.text(32, 376, "+ 添加入住人", 11, C["primary"])
+    c.text(32, 376, "+ 添加入住人（还需 1 位）", 11, C["primary"])
 
     # 订单信息
     c.rrect(16, 418, 358, 236, 14, C["card"], shadow=True)
@@ -167,9 +227,9 @@ def screen03(path):
     c.gradient(32, 460, 56, 56, "#8FA9C9", "#D9E4F2", 8)
     c.text(100, 464, "高级大床房", 13, C["text"], True)
     c.text(100, 484, "11月14日 - 11月16日 · 2 晚", 10, C["muted"])
-    c.text(100, 500, "含早 · 可取消 · 1 间", 10, C["muted"])
+    c.text(100, 500, f"含早 · 可取消 · {ROOMS} 间", 10, C["muted"])
     c.line(32, 528, 358, 528, C["line"], 1)
-    rows = [("房费（2 晚）", "¥1136"), ("服务费", "¥0"), ("优惠", "-¥0")]
+    rows = [(f"房费（{NIGHTS} 晚 × {ROOMS} 间）", f"¥{TOTAL}"), ("服务费", "¥0"), ("优惠", "-¥0")]
     yy = 540
     for k, v in rows:
         c.text(32, yy, k, 11, C["muted"])
@@ -177,7 +237,7 @@ def screen03(path):
         yy += 22
     c.line(32, 606, 358, 606, C["line"], 1)
     c.text(32, 620, "应付总额", 12, C["text"], True)
-    c.text(358, 614, "¥1136", 18, C["red"], True, "ra")
+    c.text(358, 614, f"¥{TOTAL}", 18, C["red"], True, "ra")
 
     # 预订须知
     c.rrect(16, 670, 358, 84, 12, C["blue_bg"])
@@ -189,7 +249,7 @@ def screen03(path):
     # 底部
     c.rect(0, 770, 390, 74, "#FFFFFF")
     c.line(0, 770, 390, 770, C["border"], 1)
-    c.text(20, 786, "¥1136", 20, C["red"], True)
+    c.text(20, 786, f"¥{TOTAL}", 20, C["red"], True)
     c.text(20, 810, "含税总价", 9, C["muted"])
     c.button(220, 784, 150, 44, "去支付", 15, C["primary"], "#FFFFFF", 10)
     c.save(path)
@@ -206,8 +266,8 @@ def screen04(path):
     # 金额
     c.rrect(16, 128, 358, 104, 14, C["card"], shadow=True)
     c.text(32, 146, "待支付金额", 11, C["muted"])
-    c.text(32, 164, "¥1136", 30, C["red"], True)
-    c.text(32, 202, "订单号 YQ202611100018 · 2 晚 1 间", 10, C["muted"])
+    c.text(32, 164, f"¥{TOTAL}", 30, C["red"], True)
+    c.text(32, 202, f"订单号 YQ202611100018 · {NIGHTS} 晚 {ROOMS} 间", 10, C["muted"])
 
     # 支付方式
     c.text(20, 254, "选择支付方式", 14, C["text"], True)
@@ -232,18 +292,18 @@ def screen04(path):
     # 订单摘要
     c.rrect(16, 594, 358, 150, 14, C["card"], shadow=True)
     c.text(32, 610, "订单摘要", 12, C["text"], True)
-    c.text(358, 612, "2 晚 1 间", 9, C["muted"], False, "ra")
+    c.text(358, 612, f"{NIGHTS} 晚 {ROOMS} 间", 9, C["muted"], False, "ra")
     c.text(32, 636, "高级大床房 · 含早", 11, C["text"])
     c.text(32, 658, "11月14日 - 11月16日", 10, C["muted"])
     c.text(32, 680, "入住人 黄若希", 10, C["muted"])
     c.line(32, 702, 358, 702, C["line"], 1)
     c.text(32, 714, "房费合计", 10, C["muted"])
-    c.text(358, 712, "¥1136", 16, C["red"], True, "ra")
+    c.text(358, 712, f"¥{TOTAL}", 16, C["red"], True, "ra")
 
     c.rect(0, 770, 390, 74, "#FFFFFF")
     c.line(0, 770, 390, 770, C["border"], 1)
     c.text(20, 786, "实付", 10, C["muted"])
-    c.text(20, 800, "¥1136", 20, C["red"], True)
+    c.text(20, 800, f"¥{TOTAL}", 20, C["red"], True)
     c.button(220, 784, 150, 44, "确认支付", 15, C["primary"], "#FFFFFF", 10)
     c.save(path)
 
@@ -257,18 +317,18 @@ def screen05(path):
 
     c.rrect(16, 120, 358, 132, 14, C["card"], shadow=True)
     c.text(32, 138, "已确认待入住", 16, C["green"], True)
-    c.pill(260, 136, "2 晚 1 间", 9, C["primary"], C["blue_bg"], 7, 20)
+    c.pill(260, 136, f"{NIGHTS} 晚 {ROOMS} 间", 9, C["primary"], C["blue_bg"], 7, 20)
     c.text(32, 168, "订单号 YQ202611100018", 10, C["muted"])
     c.text(32, 190, "11月14日 - 11月16日", 14, C["text"], True)
     c.text(32, 216, "云栖酒店 · 外滩店", 11, C["muted"])
 
     c.rrect(16, 268, 358, 142, 14, C["card"], shadow=True)
     c.gradient(32, 286, 72, 72, "#8FA9C9", "#D9E4F2", 8)
-    c.text(116, 288, "高级大床房", 13, C["text"], True)
+    c.text(116, 288, f"高级大床房 · {ROOMS} 间", 13, C["text"], True)
     c.text(116, 310, "28㎡ · 1.8m 大床 · 含早", 10, C["muted"])
     c.text(116, 330, "入住人：黄若希", 10, C["muted"])
     c.text(116, 348, "到店时间：预计 18:00 前", 10, C["muted"])
-    c.text(32, 380, "¥1136", 16, C["red"], True)
+    c.text(32, 380, f"¥{TOTAL}", 16, C["red"], True)
     c.text(88, 386, "已支付", 9, C["green"])
 
     # 时间轴
@@ -286,7 +346,7 @@ def screen05(path):
     c.rrect(16, 594, 358, 104, 14, C["amber_bg"])
     c.text(32, 610, "取消规则", 11, C["amber"], True)
     c.text(32, 630, "入住前 24 小时可免费取消；", 10, "#7A5A10")
-    c.text(32, 648, "24 小时内取消扣首晚房费 ¥568。", 10, "#7A5A10")
+    c.text(32, 648, f"24 小时内取消扣首晚房费 ¥{RATE * ROOMS}（{ROOMS} 间）。", 10, "#7A5A10")
     c.text(32, 668, "特殊日期（节假日/展会）按专属规则。", 9, "#8A6A12")
 
     c.rrect(16, 714, 172, 42, 10, "#FFFFFF", outline=C["border"])

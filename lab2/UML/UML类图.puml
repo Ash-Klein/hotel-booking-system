@@ -80,16 +80,17 @@ package "预订与订单  M3" {
     - orderNo : String
     - status : String
     - payMode : String
+    - roomTypeName : String
+    - checkIn : Date
+    - checkOut : Date
     - totalAmount : Money
     - expireAt : DateTime
     + confirm() : void
     + cancel(reason : String) : void
   }
   class "订单房明细 OrderItem" as OrderItem {
-    - roomTypeName : String
-    - checkIn : Date
-    - checkOut : Date
     - qty : int
+    - cancelledQty : int
     - unitPrice : Money
   }
 }
@@ -140,13 +141,16 @@ note bottom of GroupLock
 end note
 
 note bottom of OrderItem
-  下单时写入房型名称、单价、金额快照；
-  基础资料变更不影响历史订单（REQ-036）
+  <b>一单一房型</b>：房型快照放在 Order 上，
+  日期取 Order.checkIn/checkOut；
+  OrderItem 记录间数、已取消间数与成交单价，
+  支持按间部分取消；不同房型必须拆单（REQ-015）
 end note
 
 note bottom of Order
   状态取值：待支付 / 已确认待入住 / 已入住 / 正常离店 /
   已取消 / 客人未到店 / 异常订单（REQ-016）；
+  同一订单仅一个房型、一个入住/离店区间（REQ-015）；
   已入住、正常离店禁止改单与取消（REQ-017）
 end note
 

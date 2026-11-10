@@ -40,8 +40,8 @@ CONFIRMED --> EXCEPTION : 到店无房 / 门店停业
 CHECKED_IN --> CHECKED_OUT : 查房核销 / 释放库存
 CHECKED_IN --> EXCEPTION : 在店纠纷
 
-EXCEPTION --> CANCELLED : 处置完成 [退款]
-EXCEPTION --> CHECKED_OUT : 处置完成 [安置入住]
+EXCEPTION --> CANCELLED : 集团审核通过 [退款 / 转店] / 释放库存
+EXCEPTION --> CHECKED_OUT : 集团审核通过 [在店和解 / 同店安置]
 
 CANCELLED --> [*]
 CHECKED_OUT --> [*]
@@ -62,8 +62,11 @@ note right of CONFIRMED
 end note
 
 note bottom of EXCEPTION
-  异常订单由前台 / 集团人工处置，
-  处置结果必须留痕（REQ-027、REQ-030）
+  异常订单含"待审核 / 已裁决"子状态；
+  前台标记并提交，集团审核后处置；
+  审核期间保留库存占用（REQ-016、REQ-027）；
+  支付掉单 / 退款失败走异常台账，
+  不改变订单状态（REQ-029）
 end note
 
 legend bottom

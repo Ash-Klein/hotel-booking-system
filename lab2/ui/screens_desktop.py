@@ -8,7 +8,7 @@ S = 1.5
 
 
 # ---------------- 通用外壳 ----------------
-def sidebar(c, brand, sub, items, active, accent="门店后台"):
+def sidebar(c, brand, sub, items, active, accent="门店后台", user=None, initial=None):
     c.gradient(0, 0, 220, 900, "#12263F", "#1B3350")
     c.text(24, 26, brand, 16, "#FFFFFF", True)
     c.text(24, 50, sub, 10, "#8FA6C4")
@@ -30,8 +30,12 @@ def sidebar(c, brand, sub, items, active, accent="门店后台"):
         yy += 46
     # 底部账号
     c.line(20, 790, 200, 790, "#2A4463", 1)
-    c.avatar(22, 808, 34, "林" if accent == "门店后台" else "张", "#24405F", "#FFFFFF")
-    c.text(66, 812, "外滩店 · 前台小林" if accent == "门店后台" else "集团运营 · 张敏", 10, "#D6E2F0", True)
+    if accent == "门店后台":
+        who, ini = f"外滩店 · {user or '前台小林'}", initial or "林"
+    else:
+        who, ini = "集团运营 · 张敏", "张"
+    c.avatar(22, 808, 34, ini, "#24405F", "#FFFFFF")
+    c.text(66, 812, who, 10, "#D6E2F0", True)
     c.text(66, 830, "工号 10023 · 在线", 9, "#7F98B6")
 
 
@@ -51,11 +55,12 @@ def topbar(c, title, subtitle="", user="前台小林", store="外滩店", initia
     c.text(1248, 38, store, 9, C["muted"])
 
 
-def shell_store(c, active, title, subtitle=""):
+def shell_store(c, active, title, subtitle="", user="前台小林", initial="林"):
     sidebar(c, "云栖酒店", "YUNQI · 门店后台",
             [("今日工作台", "home"), ("订单管理", "list"), ("库存与房价", "calendar"),
-             ("经营报表", "chart"), ("门店设置", "settings")], active)
-    topbar(c, title, subtitle)
+             ("经营报表", "chart"), ("门店设置", "settings")], active,
+            user=user, initial=initial)
+    topbar(c, title, subtitle, user, "外滩店", initial)
 
 
 def shell_group(c, active, title, subtitle=""):
@@ -104,6 +109,17 @@ def status_pill(c, x, y, text, kind="green"):
     c.pill(x, y, text, 9, fg, bg, 8, 22)
 
 
+def mini(c, x, y, text):
+    c.text(x, y, text, 9, C["faint"])
+
+
+def field(c, x, y, w, value, h=38, chevron=False):
+    c.rrect(x, y, w, h, 8, "#FFFFFF", outline=C["border"])
+    c.text(x + 14, y + h / 2, value, 10, C["text"], False, "lm")
+    if chevron:
+        c.chevron_down(x + w - 22, y + h / 2 - 3, 8, C["muted"])
+
+
 # ---------------- 门店端 ----------------
 def screen06(path):
     c = Canvas(1440, 900, S)
@@ -118,7 +134,7 @@ def screen06(path):
 
     kpi(c, 539, 88, 280, "待退房", "8", "12:00 前退房 6 间", C["text"], "chart")
     kpi(c, 834, 88, 280, "在住", "26", "含今日续住 3 间", C["text"], "user")
-    kpi(c, 1129, 88, 287, "待处理异常", "2", "到店无房 1 · 支付异常 1", C["red"], "bell")
+    kpi(c, 1129, 88, 287, "待处理异常", "2", "需门店处置 1 · 协助核实 1", C["red"], "bell")
 
     # 到店/离店
     c.rrect(244, 204, 770, 560, 14, C["card"], shadow=True)
@@ -158,14 +174,16 @@ def screen06(path):
     c.rrect(1030, 204, 386, 260, 14, C["card"], shadow=True)
     c.text(1050, 222, "待处理异常", 14, C["text"], True)
     c.pill(1140, 220, "2", 9, C["red"], C["red_bg"], 6, 20)
-    items = [("到店无房", "张伟 · 高级大床房 · 14:00", "red"),
-             ("支付异常", "订单 YQ202611090032 待核实", "amber")]
+    items = [("到店无房", "周敏 · 行政套房 · 15:30", "red", "需门店处置", "处理 >"),
+             ("支付异常", "订单 YQ202611090032 · 财务处理中", "amber", "协助核实", "核实 >")]
     yy = 258
-    for title, desc, kind in items:
+    for title, desc, kind, owner, action in items:
         c.rrect(1050, yy, 346, 82, 10, C["red_bg"] if kind == "red" else C["amber_bg"])
         c.text(1066, yy + 14, title, 11, C["red"] if kind == "red" else C["amber"], True)
+        c.pill(1300, yy + 12, owner, 8, C["red"] if kind == "red" else C["amber"],
+               "#FFFFFF", 5, 18)
         c.text(1066, yy + 34, desc, 9, C["muted"], maxw=300)
-        c.text(1380, yy + 58, "处理 >", 9, C["primary"], False, "ra")
+        c.text(1380, yy + 58, action, 9, C["primary"], False, "ra")
         yy += 94
 
     # 快捷操作
@@ -180,6 +198,196 @@ def screen06(path):
         c.text(x + 28, y + 26, label[0], 10, C["primary"], True, "mm")
         c.text(x + 50, y + 20, label, 11, C["text"], True)
         c.text(x + 16, y + 56, "常用操作", 8, C["faint"])
+    c.save(path)
+
+
+def screen06a(path):
+    c = Canvas(1440, 900, S)
+    shell_store(c, 1, "异常处置", "外滩店 · 到店无房 / 在店纠纷")
+
+    x = 244
+    for label, active in [("待处置 3", True), ("到店无房 2", False),
+                          ("在店纠纷 1", False), ("处置记录 4", False)]:
+        w = c.text_w(label, 10, active) + 34
+        c.rrect(x, 84, w, 32, 16, C["primary"] if active else "#FFFFFF",
+                outline=None if active else C["border"])
+        c.text(x + w / 2, 100, label, 10, "#FFFFFF" if active else C["muted"], active, "mm")
+        x += w + 10
+
+    # 左：异常工单
+    c.rrect(244, 132, 650, 680, 14, C["card"], shadow=True)
+    c.text(264, 150, "异常工单", 15, C["text"], True)
+    c.pill(350, 148, "3", 9, C["red"], C["red_bg"], 7, 20)
+    c.text(874, 154, "按等待时长排序", 9, C["faint"], False, "ra")
+
+    c.text(264, 184, "待处置", 10, C["text"], True)
+    c.pill(302, 181, "3", 8, C["red"], C["red_bg"], 6, 18)
+    cols = [("类型", 90), ("订单 / 客人", 210), ("房型", 140), ("到店 / 发生", 100), ("等待", 60)]
+    table_head(c, 264, 204, 610, cols)
+
+    rows = [
+        ("到店无房", "YQ202611100041", "周敏", "行政套房", "15:30", "25 分钟", "red", True),
+        ("到店无房", "YQ202611100047", "孙悦", "高级双床房", "16:00", "12 分钟", "red", False),
+        ("在店纠纷", "YQ202611100028", "赵敏", "家庭房", "11-13 起", "2 小时", "amber", False),
+    ]
+    yy = 242
+    for typ, no, name, room, eta, wait, kind, on in rows:
+        if on:
+            c.rect(264, yy, 610, 72, "#EEF4FC")
+            c.rect(264, yy, 3, 72, C["primary"])
+        c.line(264, yy + 72, 874, yy + 72, C["line"], 1)
+        status_pill(c, 280, yy + 12, typ, kind)
+        c.text(370, yy + 10, no, 9, C["muted"])
+        c.text(370, yy + 30, name, 11, C["text"], True)
+        c.text(580, yy + 24, room, 10, C["text"])
+        c.text(720, yy + 24, eta, 10, C["muted"])
+        c.text(820, yy + 24, wait, 10, C["red"] if on else C["muted"], on)
+        yy += 72
+
+    c.line(264, 476, 874, 476, C["line"], 1)
+    c.text(264, 492, "最近处置记录", 10, C["text"], True)
+    c.pill(386, 489, "4", 8, C["primary"], C["blue_bg"], 6, 18)
+    c.text(874, 498, "查看全部 >", 9, C["muted"], False, "ra")
+
+    subs = [
+        ("YQ202611100035", "吴磊", "到店无房", "已转静安店", "13:40", "green"),
+        ("YQ202611100038", "何静", "在店纠纷", "待集团审核", "12:10", "amber"),
+        ("YQ202611100029", "郑爽", "到店无房", "已退款", "11:05", "gray"),
+        ("YQ202611100022", "王芳", "在店纠纷", "已和解离店", "10:30", "gray"),
+    ]
+    yy = 522
+    for no, name, typ, result, tm, kind in subs:
+        c.text(280, yy + 8, no, 8, C["muted"])
+        c.text(280, yy + 25, f"{name} · {typ}", 10, C["text"], True)
+        status_pill(c, 640, yy + 14, result, kind)
+        c.text(800, yy + 25, tm, 9, C["faint"])
+        c.line(280, yy + 51, 860, yy + 51, C["line"], 1)
+        yy += 52
+
+    c.text(264, 758, "最近 4 条 · 审核结果回写台账与报表", 9, C["faint"])
+
+    # 右：到店无房处置
+    c.rrect(910, 132, 506, 680, 14, C["card"], shadow=True)
+    c.text(934, 150, "到店无房处置", 15, C["text"], True)
+    c.pill(1312, 148, "待提交", 9, C["amber"], C["amber_bg"], 7, 20)
+
+    c.rrect(934, 184, 458, 96, 12, "#F7F9FC")
+    c.avatar(950, 198, 40, "周")
+    c.text(1002, 196, "周敏", 13, C["text"], True)
+    c.text(1002, 218, "138****6620 · 订单 YQ202611100041", 9, C["muted"])
+    c.text(1002, 238, "行政套房 · 11-14 → 11-16 · 1 间 · ¥1796", 9, C["muted"])
+    status_pill(c, 1296, 196, "已确认待入住", "green")
+
+    mini(c, 934, 300, "异常原因")
+    field(c, 934, 316, 458, "原房间空调故障，无法入住")
+
+    mini(c, 934, 368, "同城安置（优先同城其他门店）")
+    field(c, 934, 384, 458, "云栖酒店 · 静安店", chevron=True)
+    field(c, 934, 432, 286, "行政套房")
+    field(c, 1232, 432, 160, "1 间")
+    field(c, 934, 480, 458, "11-14 → 11-16（2 晚）")
+
+    mini(c, 934, 532, "费用与通知")
+    field(c, 934, 548, 220, "赔付 ¥200")
+    field(c, 1172, 548, 220, "安置费 ¥898")
+    field(c, 934, 596, 458, "14:05 电话联系，客人同意转店")
+
+    c.text(934, 646, "提交后订单转「异常订单（待审核）」，库存保留", 9, C["amber"])
+    c.text(934, 664, "集团审核前不得退款、取消或改期", 9, C["muted"])
+
+    c.button(934, 700, 150, 44, "暂存", 11, "#FFFFFF", C["primary"], 8, outline=C["border"])
+    c.button(1096, 700, 296, 44, "标记异常并提交集团审核", 12, C["primary"], "#FFFFFF", 8)
+    c.text(934, 762, "操作写入日志（REQ-030），集团审核结果回写本页", 8, C["faint"])
+    c.save(path)
+
+
+def screen06b(path):
+    c = Canvas(1440, 900, S)
+    shell_store(c, 0, "停业与支付异常", "外滩店 · 门店临时停业 / 支付异常协助", "店长王敏", "王")
+
+    # 左：门店停业
+    c.rrect(244, 84, 656, 728, 14, C["card"], shadow=True)
+    c.text(264, 104, "门店停业处置", 15, C["text"], True)
+    c.text(474, 106, "当前状态", 9, C["faint"])
+    c.pill(534, 101, "临时停业", 9, C["red"], C["red_bg"], 7, 22)
+    c.button(740, 96, 140, 34, "恢复营业", 10, "#FFFFFF", C["primary"], 8, outline=C["border"])
+    c.line(264, 140, 880, 140, C["line"], 1)
+
+    c.text(264, 158, "受影响订单处置", 11, C["text"], True)
+    c.text(264, 176, "仅列出已支付的有效订单，退款或改期后自动移出", 9, C["muted"])
+    field(c, 264, 196, 300, "11-14 00:00 → 11-15 12:00")
+    c.text(580, 214, "调整", 9, C["primary"])
+    c.text(264, 250, "受影响订单 12 单 · 已通知 8 · 待通知 4", 10, C["text"])
+
+    cols = [("订单号", 130), ("客人", 70), ("房型", 130),
+            ("入住 - 离店", 110), ("金额", 70), ("通知", 70)]
+    table_head(c, 264, 276, 616, cols)
+    rows = [
+        ("YQ202611100041", "周敏", "行政套房", "11-14 → 11-16", "¥1796", "已通知", "green"),
+        ("YQ202611100047", "孙悦", "高级双床房", "11-14 → 11-16", "¥1056", "待通知", "amber"),
+        ("YQ202611100015", "陈静", "高级大床房", "11-14 → 11-15", "¥568", "已通知", "green"),
+        ("YQ202611100016", "王强", "高级双床房", "11-14 → 11-17", "¥1584", "待通知", "amber"),
+        ("YQ202611100017", "李娜", "行政套房", "11-14 → 11-15", "¥898", "已通知", "green"),
+        ("YQ202611100018", "张伟", "高级大床房", "11-14 → 11-16", "¥2272", "待通知", "amber"),
+    ]
+    yy = 314
+    for i, (no, name, room, dates, amount, notice, kind) in enumerate(rows):
+        if i % 2 == 1:
+            c.rect(264, yy, 616, 54, "#FAFBFD")
+        c.text(280, yy + 20, no, 9, C["text"])
+        c.text(410, yy + 20, name, 10, C["text"], True)
+        c.text(480, yy + 20, room, 9, C["text"])
+        c.text(610, yy + 20, dates, 9, C["muted"])
+        c.text(720, yy + 20, amount, 9, C["text"])
+        status_pill(c, 790, yy + 16, notice, kind)
+        yy += 54
+
+    c.text(264, 660, "停业期间退款不受 24 小时与 ¥500 上限限制（REQ-028）", 9, C["amber"])
+    c.button(264, 700, 180, 40, "批量通知（4）", 10, "#FFFFFF", C["primary"], 8, outline=C["border"])
+    c.button(456, 700, 200, 40, "批量全额退款", 10, C["primary"], "#FFFFFF", 8)
+    c.text(264, 754, "退款后订单转已取消，库存按 REQ-009 释放；通知结果逐单留痕", 9, C["faint"])
+
+    # 右：支付异常协助核实
+    c.rrect(916, 84, 500, 728, 14, C["card"], shadow=True)
+    c.text(936, 104, "支付异常 · 协助核实", 15, C["text"], True)
+    c.pill(1320, 102, "财务处理中", 9, C["amber"], C["amber_bg"], 7, 20)
+
+    c.rrect(936, 140, 460, 104, 12, "#F7F9FC")
+    c.avatar(952, 154, 40, "刘")
+    c.text(1002, 152, "刘洋", 13, C["text"], True)
+    c.text(1002, 174, "135****2277 · 订单 YQ202611090032", 9, C["muted"])
+    c.text(1002, 194, "商务大床房 · 11-13 → 11-14 · ¥568", 9, C["muted"])
+    status_pill(c, 1300, 152, "异常", "red")
+
+    mini(c, 936, 264, "异常类型")
+    field(c, 936, 280, 460, "退款失败（渠道超时）")
+    c.text(936, 330, "退款单号 R20261109001 · 微信支付", 9, C["muted"])
+
+    c.text(936, 366, "门店核实", 10, C["text"], True)
+    c.text(936, 390, "客人是否已离店", 9, C["faint"])
+    c.pill(1080, 384, "是", 9, "#FFFFFF", C["primary"], 8, 22)
+    c.pill(1128, 384, "否", 9, C["muted"], "#FFFFFF", 8, 22, outline=C["border"])
+
+    c.text(936, 426, "支付凭证", 9, C["faint"])
+    field(c, 936, 442, 220, "已核对")
+    c.text(1172, 426, "联系结果", 9, C["faint"])
+    field(c, 1172, 442, 224, "已告知延迟")
+
+    mini(c, 936, 490, "备注")
+    field(c, 936, 506, 460, "客人已离店，退款到账后电话通知", h=56)
+
+    c.text(936, 590, "处理进度", 10, C["text"], True)
+    steps = [("10:12", "系统识别退款失败"), ("10:15", "推送门店 / 财务"), ("14:20", "门店核实完成")]
+    yy = 610
+    for tm, desc in steps:
+        c.circle(940, yy + 6, 4, fill=C["primary"])
+        c.text(954, yy, tm, 9, C["muted"])
+        c.text(1000, yy, desc, 9, C["text"])
+        yy += 26
+
+    c.text(936, 692, "门店只做核实，不补录订单、不发起退款", 9, C["amber"])
+    c.button(936, 714, 460, 42, "提交运营核实", 12, C["primary"], "#FFFFFF", 8)
+    c.text(936, 770, "提交后由财务跟进，处理结果回写异常台账", 8, C["faint"])
     c.save(path)
 
 
@@ -272,7 +480,7 @@ def screen08(path):
     c.icon_search(260, 92, 16, C["faint"])
     c.text(284, 102, "订单号 / 手机号 / 姓名", 10, C["faint"], False, "lm")
     c.button(776, 84, 80, 36, "检索", 10, C["primary"], "#FFFFFF", 8)
-    for i, label in enumerate(["今日到店", "待入住", "已入住", "全部"]):
+    for i, label in enumerate(["今日到店", "待入住", "已入住", "异常", "全部"]):
         x = 244 + i * 100
         on = i == 0
         c.text(x + 32, 144, label, 10, C["primary"] if on else C["muted"], on, "mm")
@@ -302,6 +510,8 @@ def screen08(path):
         c.text(610, yy + 24, room, 9, C["text"])
         c.text(740, yy + 24, dates, 9, C["muted"])
         status_pill(c, 880, yy + 21, st, kind)
+        if st == "异常":
+            c.text(960, yy + 24, "处置 >", 9, C["primary"])
         yy += 64
     c.text(260, 740, "共 6 条订单 · 仅显示本门店", 9, C["faint"])
 
@@ -316,7 +526,7 @@ def screen08(path):
     c.avatar(1080, 162, 44, "张")
     c.text(1136, 162, "张伟", 14, C["text"], True)
     c.text(1136, 184, "138****1024 · 高级会员", 9, C["muted"])
-    c.text(1136, 202, "入住 11-14 → 离店 11-16 · 1 间", 9, C["muted"])
+    c.text(1136, 202, "入住 11-14 → 离店 11-16 · 2 间", 9, C["muted"])
 
     c.text(1064, 256, "证件核验", 10, C["text"], True)
     c.rrect(1064, 274, 352, 40, 8, "#FFFFFF", outline=C["border"])
@@ -335,7 +545,7 @@ def screen08(path):
     c.line(1064, 460, 1416, 460, C["line"], 1)
 
     c.text(1064, 478, "订单金额", 10, C["muted"])
-    c.text(1416, 476, "¥1136", 18, C["red"], True, "ra")
+    c.text(1416, 476, "¥2272", 18, C["red"], True, "ra")
     c.text(1064, 504, "已支付 · 微信支付", 9, C["green"])
     c.line(1064, 532, 1416, 532, C["line"], 1)
 
