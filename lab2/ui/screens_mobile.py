@@ -20,65 +20,55 @@ def header(c, h=300, title=""):
 
 def screen01(path):
     c = Canvas(390, 844, 2)
-    header(c, 300)
+    header(c, 280)
     c.text(24, 60, "云栖酒店 · YUNQI", 11, "#C9D6E7", True)
-    c.text(24, 82, "找到今晚", 27, "#FFFFFF", True)
-    c.text(24, 116, "的好房间", 27, "#FFFFFF", True)
-    c.text(24, 158, "46 家门店 · 6 座城市 · 实时房态", 11, "#B9C9DC")
+    c.text(24, 82, "挑一家", 27, "#FFFFFF", True)
+    c.text(24, 116, "想住的酒店", 27, "#FFFFFF", True)
+    c.text(24, 158, "上海 · 6 家门店 · 实时房态", 11, "#B9C9DC")
 
-    # 搜索卡
-    x, y, w = 20, 186, 350
-    c.rrect(x, y, w, 214, 16, C["card"], shadow=True)
-    c.text(38, 204, "上海", 19, C["text"], True)
-    c.d.line([c.px(84), c.px(213), c.px(90), c.px(219), c.px(96), c.px(213)],
+    # 选店卡
+    x, y, w = 20, 180, 350
+    c.rrect(x, y, w, 224, 16, C["card"], shadow=True)
+    c.text(38, 198, "上海", 18, C["text"], True)
+    c.d.line([c.px(82), c.px(207), c.px(88), c.px(213), c.px(94), c.px(207)],
              fill=C["muted"], width=c.px(1.6))
-    c.text(332, 208, "2 晚", 11, C["muted"], False, "ra")
+    c.text(332, 200, "2 晚", 10, C["muted"], False, "ra")
 
-    c.line(38, 238, 352, 238, C["line"], 1)
+    c.line(38, 232, 352, 232, C["line"], 1)
+    c.text(38, 246, "入住门店", 9, C["faint"])
+    c.text(38, 262, "云栖酒店 · 外滩店", 14, C["text"], True)
+    c.text(352, 264, "更换", 10, C["primary"], False, "ra")
 
-    c.text(38, 252, "入住", 10, C["faint"])
-    c.text(38, 266, "11月14日", 15, C["text"], True)
-    c.text(38, 284, "周六", 10, C["muted"])
-    c.text(178, 266, "→", 15, C["faint"])
-    c.text(204, 252, "离店", 10, C["faint"])
-    c.text(204, 266, "11月16日", 15, C["text"], True)
-    c.text(204, 284, "周一", 10, C["muted"])
+    c.line(38, 292, 352, 292, C["line"], 1)
+    c.text(38, 306, "入住", 9, C["faint"])
+    c.text(38, 320, "11月14日", 14, C["text"], True)
+    c.text(38, 340, "周六", 9, C["muted"])
+    c.text(176, 318, "→", 14, C["faint"])
+    c.text(204, 306, "离店", 9, C["faint"])
+    c.text(204, 320, "11月16日", 14, C["text"], True)
+    c.text(204, 340, "周一", 9, C["muted"])
 
-    c.line(38, 304, 352, 304, C["line"], 1)
-    c.text(38, 316, "2 位成人 · 1 间客房", 12, C["text"])
-    c.text(332, 316, "修改", 11, C["primary"], False, "ra")
+    c.button(38, 356, 314, 40, "查看房型", 14, C["primary"], "#FFFFFF", 10)
 
-    c.button(38, 342, 314, 44, "查空房", 15, C["primary"], "#FFFFFF", 10)
+    # 该店房型推荐
+    c.text(20, 430, "外滩店 · 房型推荐", 15, C["text"], True)
+    c.text(370, 434, "共 5 种房型", 9, C["muted"], False, "ra")
 
-    # 快捷筛选
-    chips = ["今日特惠", "含早餐", "大床房", "可取消"]
-    xx = 20
-    for i, s in enumerate(chips):
-        ww = c.pill(xx, 418, s, 11, C["primary"] if i == 0 else C["muted"],
-                    C["blue_bg"] if i == 0 else "#FFFFFF", 10, 26,
-                    outline=None if i == 0 else C["border"])
-        xx += ww + 8
-
-    c.text(20, 462, "附近酒店", 16, C["text"], True)
-    c.text(370, 466, "查看全部 >", 11, C["muted"], False, "ra")
-
-    hotels = [
-        ("云栖酒店 · 外滩店", "4.8", "距外滩 350m · 含早", "568", "仅剩 3 间", "#8FA9C9", "#D9E4F2"),
-        ("云栖酒店 · 人民广场店", "4.7", "地铁 2 号线 · 可取消", "486", "仅剩 5 间", "#A9B8C9", "#E6EEF7"),
+    rooms = [
+        ("高级大床房", "28㎡ · 1.8m 大床 · 含早", "568", "仅剩 3 间", "#8FA9C9", "#D9E4F2"),
+        ("高级双床房", "30㎡ · 1.2m 双床 · 含早", "528", "仅剩 5 间", "#A9B8C9", "#E6EEF7"),
+        ("行政套房", "46㎡ · 1.8m 大床 · 含双早", "898", "仅剩 1 间", "#9BB0C9", "#DCE6F2"),
     ]
-    yy = 490
-    for name, score, desc, price, left, c1, c2 in hotels:
-        c.rrect(20, yy, 350, 136, 14, C["card"], shadow=True)
-        photo(c, 20, yy, 108, 136, 14, c1, c2)
-        c.text(142, yy + 18, name, 14, C["text"], True, maxw=200)
-        c.icon_star(142, yy + 42, 11)
-        c.text(158, yy + 42, score, 11, C["gold"], True)
-        c.text(142, yy + 64, desc, 10, C["muted"], maxw=210)
-        c.text(142, yy + 88, "¥", 10, C["red"])
-        c.text(152, yy + 82, price, 18, C["red"], True)
-        c.text(152 + c.text_w(price, 18, True) + 3, yy + 90, "起", 10, C["muted"])
-        c.pill(142, yy + 108, left, 9, C["amber"], C["amber_bg"], 6, 18)
-        yy += 150
+    yy = 456
+    for name, desc, price, left, c1, c2 in rooms:
+        c.rrect(20, yy, 350, 96, 12, C["card"], shadow=True)
+        photo(c, 20, yy, 76, 96, 12, c1, c2)
+        c.text(108, yy + 16, name, 13, C["text"], True)
+        c.text(108, yy + 38, desc, 9, C["muted"], maxw=180)
+        c.pill(108, yy + 62, left, 9, C["amber"], C["amber_bg"], 6, 18)
+        c.text(344, yy + 20, "¥" + price, 15, C["red"], True, "ra")
+        c.text(344, yy + 42, "起 / 晚", 8, C["muted"], False, "ra")
+        yy += 106
 
     c.tab_bar(0)
     c.save(path)
@@ -99,7 +89,7 @@ def screen02(path):
     c.text(30, 160, "11月14日 周六", 12, C["text"], True)
     c.text(180, 164, "→", 14, C["faint"])
     c.text(206, 160, "11月16日 周一", 12, C["text"], True)
-    c.text(30, 180, "2 晚 · 1 间", 10, C["muted"])
+    c.text(30, 180, "2 晚 · 2 位成人 · 1 间", 10, C["muted"])
     c.text(344, 170, "修改", 11, C["primary"], False, "ra")
 
     chips = ["含早", "大床", "可取消"]
@@ -107,7 +97,8 @@ def screen02(path):
     for i, s in enumerate(chips):
         ww = c.pill(xx, 218, s, 10, C["primary"], C["blue_bg"], 9, 24)
         xx += ww + 8
-    c.text(374, 226, "价格从低到高", 10, C["muted"], False, "ra")
+    c.text(370, 226, "2 位 · 1 间", 10, C["primary"], False, "ra")
+    c.chevron_down(374, 229, 7, C["primary"])
 
     rooms = [
         ("高级大床房", "28㎡ · 1.8m 大床 · 含早", "568", "仅剩 2 间", "可取消", "#8FA9C9", "#D9E4F2"),

@@ -16,7 +16,7 @@ from screens_mobile import screen01, screen02, screen03, screen04, screen05
 from screens_desktop import screen06, screen07, screen08, screen09, screen10, screen11
 
 MOBILE = [
-    ("界面01-客人端-首页搜索.png", screen01),
+    ("界面01-客人端-首页选店.png", screen01),
     ("界面02-客人端-房型报价.png", screen02),
     ("界面03-客人端-填单锁房.png", screen03),
     ("界面04-客人端-支付.png", screen04),
