@@ -65,16 +65,16 @@ Manager --> UC_Lock
 Manager --> UC_Approve
 Manager --> UC_Report
 
-Finance --> UC_Recon
-Finance --> UC_Report
-Finance --> UC_Query
+UC_Recon <-- Finance
+UC_Report <-- Finance
+UC_Query <-- Finance
 
-Admin --> UC_Base
-Admin --> UC_RoleLog
-Admin --> UC_Inv
-Admin --> UC_Exception
+UC_Base <-- Admin
+UC_RoleLog <-- Admin
+UC_Inv <-- Admin
+UC_Exception <-- Admin
 
-City --> UC_Report
+UC_Report <-- City
 
 note right of UC_Submit
   下单即锁房：线上预付 15 分钟，
@@ -82,6 +82,7 @@ note right of UC_Submit
 end note
 
 legend bottom
+  <b>左右分区</b>：左 顾客与门店端（顾客 / 门店前台 / 门店店长）｜ 右 集团端（集团财务 / 集团运营管理员 / 城市经理）
   <b>模块配色</b>：蓝 M3 预订与订单 ｜ 绿 M2 价格与库存 ｜ 橙 M5 前台履约
   紫 M4 支付与退款 ｜ 黄 M1 基础资料 ｜ 青 M6 报表 ｜ 灰 M7 权限与审计
   <b>角色关系</b>：店长继承前台全部用例（权限上位），另加库存、价格、锁房、退款审批、报表
