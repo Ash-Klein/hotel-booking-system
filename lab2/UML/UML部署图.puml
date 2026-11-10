@@ -44,7 +44,7 @@ node "对象存储" as OSS
 cloud "支付网关" as PAY
 cloud "短信 / 订阅消息" as SMS
 node "备份存储" as BAK
-node "调度任务\n订单超时 / 协议锁房到期" as JOB
+node "调度任务\n订单超时 / 锁房到期 / 夜审" as JOB
 
 MP --> NG
 PC --> NG
@@ -61,7 +61,7 @@ DB --> BAK : 每日全量 + binlog
 APP1 --> OSS : 导出文件
 APP1 --> PAY
 APP1 --> SMS
-JOB --> DB : 扫描超时订单 / 到期锁房
+JOB --> DB : 扫描超时 / 到期锁房 / No-show 判定
 JOB --> REDIS : 分布式锁
 
 note right of DB

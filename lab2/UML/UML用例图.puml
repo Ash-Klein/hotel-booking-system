@@ -36,7 +36,6 @@ rectangle "酒店预订系统（一期）" {
 
   usecase "办理入住" as UC_CheckIn #FFF3E0
   usecase "办理退房" as UC_CheckOut #FFF3E0
-  usecase "登记 No-show" as UC_NoShow #FFF3E0
   usecase "处理异常订单" as UC_Exception #FFF3E0
 
   usecase "退款审批" as UC_Approve #F3E5F5
@@ -54,15 +53,16 @@ Guest --> UC_Query
 
 Front --> UC_CheckIn
 Front --> UC_CheckOut
-Front --> UC_NoShow
+Front --> UC_Change
 Front --> UC_Exception
 Front --> UC_Query
+
+Front <|-- Manager : 权限上位
 
 Manager --> UC_Inv
 Manager --> UC_Close
 Manager --> UC_Lock
 Manager --> UC_Approve
-Manager --> UC_Query
 Manager --> UC_Report
 
 Finance --> UC_Recon
@@ -84,6 +84,8 @@ end note
 legend bottom
   <b>模块配色</b>：蓝 M3 预订与订单 ｜ 绿 M2 价格与库存 ｜ 橙 M5 前台履约
   紫 M4 支付与退款 ｜ 黄 M1 基础资料 ｜ 青 M6 报表 ｜ 灰 M7 权限与审计
+  <b>角色关系</b>：店长继承前台全部用例（权限上位），另加库存、价格、锁房、退款审批、报表
+  <b>No-show</b>：由夜审在当日 24:00 自动判定（REQ-019），不是人工用例；异常经"处理异常订单"承接
   <b>一期范围外</b>：会员/积分、OTA 对接、电子发票、房态/房号管理（REQ-038、REQ-050）
 endlegend
 
