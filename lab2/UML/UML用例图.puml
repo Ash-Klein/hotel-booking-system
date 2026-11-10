@@ -1,0 +1,89 @@
+@startuml UML用例图
+!pragma layout smetana
+skinparam defaultFontName "Microsoft YaHei"
+skinparam dpi 200
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam roundCorner 10
+skinparam ArrowColor #1F3A5F
+skinparam ArrowFontColor #1F3A5F
+skinparam ArrowFontSize 12
+skinparam usecaseBorderColor #1F3A5F
+skinparam usecaseFontColor #1F3A5F
+skinparam actorBorderColor #1F3A5F
+skinparam actorBackgroundColor #FFFFFF
+skinparam rectangleBorderColor #1F3A5F
+skinparam rectangleFontColor #1F3A5F
+left to right direction
+title 图3-1  酒店预订系统用例图
+
+actor "顾客" as Guest
+actor "门店前台" as Front
+actor "门店店长" as Manager
+actor "集团财务" as Finance
+actor "集团运营\n管理员" as Admin
+actor "城市经理\n（只读）" as City
+
+rectangle "酒店预订系统（一期）" {
+  usecase "搜索房型与报价" as UC_Search #E3F2FD
+  usecase "提交订单" as UC_Submit #E3F2FD
+  usecase "修改 / 取消订单" as UC_Change #E3F2FD
+  usecase "查询订单" as UC_Query #E3F2FD
+
+  usecase "维护每日库存与价格" as UC_Inv #E8F5E9
+  usecase "关房 / 停售" as UC_Close #E8F5E9
+  usecase "协议锁房" as UC_Lock #E8F5E9
+
+  usecase "办理入住" as UC_CheckIn #FFF3E0
+  usecase "办理退房" as UC_CheckOut #FFF3E0
+  usecase "登记 No-show" as UC_NoShow #FFF3E0
+  usecase "处理异常订单" as UC_Exception #FFF3E0
+
+  usecase "退款审批" as UC_Approve #F3E5F5
+  usecase "导出对账数据" as UC_Recon #F3E5F5
+
+  usecase "维护门店与房型" as UC_Base #FFFDE7
+  usecase "查看经营报表" as UC_Report #E0F2F1
+  usecase "配置权限与审计" as UC_RoleLog #ECEFF1
+}
+
+Guest --> UC_Search
+Guest --> UC_Submit
+Guest --> UC_Change
+Guest --> UC_Query
+
+Front --> UC_CheckIn
+Front --> UC_CheckOut
+Front --> UC_NoShow
+Front --> UC_Exception
+Front --> UC_Query
+
+Manager --> UC_Inv
+Manager --> UC_Close
+Manager --> UC_Lock
+Manager --> UC_Approve
+Manager --> UC_Report
+
+Finance --> UC_Recon
+Finance --> UC_Report
+Finance --> UC_Query
+
+Admin --> UC_Base
+Admin --> UC_RoleLog
+Admin --> UC_Inv
+Admin --> UC_Exception
+
+City --> UC_Report
+
+note right of UC_Submit
+  下单即锁房：线上预付 15 分钟，
+  到店现付 30 分钟（REQ-014/018）
+end note
+
+legend bottom
+  <b>模块配色</b>：蓝 M3 预订与订单 ｜ 绿 M2 价格与库存 ｜ 橙 M5 前台履约
+  紫 M4 支付与退款 ｜ 黄 M1 基础资料 ｜ 青 M6 报表 ｜ 灰 M7 权限与审计
+  <b>一期范围外</b>：会员/积分、OTA 对接、电子发票、房态/房号管理（REQ-038、REQ-050）
+endlegend
+
+@enduml

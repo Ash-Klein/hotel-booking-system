@@ -1,0 +1,61 @@
+@startuml UML活动图
+skinparam defaultFontName "Microsoft YaHei"
+skinparam dpi 200
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam ArrowColor #1F3A5F
+skinparam ArrowFontColor #1F3A5F
+skinparam ArrowFontSize 12
+skinparam activityBorderColor #1F3A5F
+skinparam activityBackgroundColor #F7F9FC
+skinparam activityFontColor #1F3A5F
+skinparam activityFontSize 14
+skinparam noteBackgroundColor #FFF8E1
+skinparam noteBorderColor #C9A227
+skinparam noteFontColor #5D4037
+skinparam nodesep 35
+skinparam ranksep 40
+title 图3-5  下单主流程活动图
+
+start
+:顾客：筛选城市 / 日期 / 人数 / 房型;
+:顾客：查看房型与报价;
+:顾客：填写入住人信息并提交订单;
+:预订服务：幂等校验（订单号 + 请求号）;
+if (重复提交?) then (是)
+  :返回已有订单;
+  stop
+endif
+:预订服务：创建订单（待支付）;
+:库存服务：按自然日逐日校验库存;
+if (任意一天不足?) then (是)
+  :返回无房提示 + 邻近推荐;
+  stop
+else (否)
+  :库存服务：条件更新 locked + qty;
+endif
+:预订服务：开始锁房计时（15 / 30 分钟）;
+if (支付方式?) then (线上预付)
+  :顾客：在线支付;
+  :支付网关：扣款;
+  if (支付成功?) then (是)
+    :预订服务：收到回调\nsold + qty，locked - qty;
+  else (否 / 超时)
+    :库存服务：释放 locked;
+    :预订服务：订单自动取消;
+    stop
+  endif
+else (到店现付)
+  :门店前台：30 分钟内确认订单;
+  if (按时确认?) then (是)
+    :预订服务：订单确认;
+  else (否)
+    :库存服务：释放 locked;
+    :预订服务：订单自动取消;
+    stop
+  endif
+endif
+:通知服务：发送确认通知（异步）;
+stop
+
+@enduml

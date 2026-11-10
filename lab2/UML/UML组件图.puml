@@ -1,0 +1,90 @@
+@startuml UML组件图
+skinparam defaultFontName "Microsoft YaHei"
+skinparam dpi 200
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam roundCorner 8
+skinparam ArrowColor #1F3A5F
+skinparam ArrowFontColor #1F3A5F
+skinparam ArrowFontSize 12
+skinparam componentBorderColor #1F3A5F
+skinparam componentBackgroundColor #F7F9FC
+skinparam componentFontColor #1F3A5F
+skinparam componentFontSize 13
+skinparam databaseBorderColor #1F3A5F
+skinparam databaseBackgroundColor #F7F9FC
+skinparam noteBackgroundColor #FFF8E1
+skinparam noteBorderColor #C9A227
+skinparam noteFontColor #5D4037
+skinparam nodesep 40
+skinparam ranksep 60
+title 图3-3  酒店预订系统组件图
+
+[微信小程序] as MP
+[PC 网页] as WEB
+[门店后台] as STORE
+[集团后台] as HQ
+[API 网关\n鉴权 / 限流 / 幂等] as GW
+
+[ M1 基础资料 ] as M1
+[ M2 库存与价格 ] as M2
+[ M3 预订与订单 ] as M3
+[ M4 支付与退款 ] as M4
+[ M5 前台履约 ] as M5
+[ M6 报表与对账 ] as M6
+[ M7 权限与审计 ] as M7
+
+database "MySQL 主库" as DB
+database "MySQL 从库" as RO
+[Redis\n锁房 TTL] as REDIS
+[支付网关] as PAY
+
+MP --> GW
+WEB --> GW
+STORE --> GW
+HQ --> GW
+
+GW --> M3
+GW --> M5
+GW --> M6
+GW --> M7
+
+M2 --> M1 : 读取房型 / 基准价
+M3 --> M2 : 预占 / 释放
+M5 --> M2 : 入住 / 退房释放
+M3 --> M4 : 创建支付单
+M4 --> M3 : 支付结果回调
+M4 --> PAY
+M2 --> DB
+M1 --> DB
+M3 --> DB
+M4 --> DB
+M6 --> RO : 只读
+M2 --> REDIS
+
+note right of M6
+  报表只读从库，不参与交易事务；
+  导出走对象存储（S2），不阻塞下单
+end note
+
+note bottom of M7
+  横切能力：鉴权、门店数据隔离、
+  手机号脱敏、操作日志（异步写入）
+end note
+
+note bottom of M4
+  支付结果由网关回调更新订单；
+  通知由 S1 异步发送，主链不等待
+end note
+
+note left of M2
+  防超卖唯一事实源：
+  条件更新 + 唯一约束兜底
+end note
+
+legend bottom
+  层次：上 接入层 ｜ 中 应用服务（M1–M7，对应 7 个业务模块）｜ 下 基础设施
+endlegend
+
+@enduml

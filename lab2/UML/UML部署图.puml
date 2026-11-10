@@ -1,0 +1,74 @@
+@startuml UML部署图
+skinparam defaultFontName "Microsoft YaHei"
+skinparam dpi 200
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam roundCorner 8
+skinparam ArrowColor #1F3A5F
+skinparam ArrowFontColor #1F3A5F
+skinparam ArrowFontSize 12
+skinparam nodeBorderColor #1F3A5F
+skinparam nodeBackgroundColor #FFFFFF
+skinparam nodeFontColor #1F3A5F
+skinparam databaseBorderColor #1F3A5F
+skinparam databaseBackgroundColor #F7F9FC
+skinparam cloudBorderColor #1F3A5F
+skinparam cloudBackgroundColor #F7F9FC
+skinparam noteBackgroundColor #FFF8E1
+skinparam noteBorderColor #C9A227
+skinparam noteFontColor #5D4037
+skinparam nodesep 35
+skinparam ranksep 50
+title 图3-7  酒店预订系统部署图
+
+node "用户侧" {
+  node "微信小程序" as MP
+  node "PC 浏览器" as PC
+  node "门店 PC / 平板" as STORE
+  node "集团 PC" as HQ
+}
+
+node "接入层" {
+  node "Nginx / 负载均衡" as NG
+}
+
+node "应用集群（≥ 2 节点）" {
+  node "应用节点 1" as APP1
+  node "应用节点 2" as APP2
+}
+
+database "MySQL 主库" as DB
+database "MySQL 只读从库" as RO
+node "Redis 哨兵" as REDIS
+node "对象存储" as OSS
+cloud "支付网关" as PAY
+cloud "短信 / 订阅消息" as SMS
+node "备份存储" as BAK
+
+MP --> NG
+PC --> NG
+STORE --> NG
+HQ --> NG
+NG --> APP1
+NG --> APP2
+APP1 --> DB
+APP2 --> DB
+APP1 --> REDIS
+APP2 --> REDIS
+APP1 --> RO : 报表只读
+DB --> BAK : 每日全量 + binlog
+APP1 --> OSS : 导出文件
+APP1 --> PAY
+APP1 --> SMS
+
+note right of DB
+  主从同城同步，RPO ≈ 0；
+  可用性目标 99.9%（REQ-041/042）
+end note
+
+note bottom of STORE
+  门店断网时手工登记，
+  恢复后补录（一期不做离线，REQ-038）
+end note
+
+@enduml

@@ -23,3 +23,24 @@ report.pdf
 
 # 提交压缩包
 实验1_*.zip
+
+# ===== 实验二 =====
+# 本地环境与二进制（体积大，不入库；换机用 tools/install_*.py 重建）
+lab2/tools/jdk21/
+lab2/tools/Pixso/
+lab2/tools/graphviz/
+lab2/tools/pylibs/
+lab2/tools/downloads/
+lab2/tools/tmp/
+lab2/tools/*.lnk
+lab2/tools/*.zip
+lab2/tools/*.jar
+
+# 环境与渲染脚本需要入库（覆盖上面的全局 *.py）
+!lab2/tools/*.py
+!lab2/tools/*.cmd
+!lab2/tools/*.ps1
+
+# 实验二提交压缩包与他人作业
+lab2/实验2_*.zip
+lab2/*.zip

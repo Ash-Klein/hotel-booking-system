@@ -1,0 +1,147 @@
+@startuml UML类图
+skinparam defaultFontName "Microsoft YaHei"
+skinparam dpi 200
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam roundCorner 8
+skinparam ArrowColor #1F3A5F
+skinparam ArrowFontColor #1F3A5F
+skinparam ArrowFontSize 11
+skinparam classBorderColor #1F3A5F
+skinparam classBackgroundColor #F7F9FC
+skinparam classHeaderBackgroundColor #DCE6F2
+skinparam classFontColor #1F3A5F
+skinparam classFontSize 13
+skinparam classAttributeFontSize 11
+skinparam classAttributeIconSize 0
+skinparam packageBorderColor #1F3A5F
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageFontColor #1F3A5F
+skinparam noteBackgroundColor #FFF8E1
+skinparam noteBorderColor #C9A227
+skinparam noteFontColor #5D4037
+skinparam nodesep 25
+skinparam ranksep 45
+title 图3-2  酒店预订系统核心类图（交易域）
+
+package "库存与价格  M2" {
+  class "门店 Hotel" as Hotel {
+    - hotelId : String
+    - name : String
+    - city : String
+  }
+  class "房型 RoomType" as RoomType {
+    - roomTypeId : String
+    - name : String
+    - bedType : String
+  }
+  class "每日库存 DailyInventory" as DailyInventory {
+    - hotelId : String
+    - roomTypeId : String
+    - bizDate : Date
+    - total : int
+    - sold : int
+    - locked : int
+    - version : int
+    + available() : int
+    + reserve(qty : int) : boolean
+    + release(qty : int) : void
+    + confirm(qty : int) : void
+  }
+  class "每日价格 DailyPrice" as DailyPrice {
+    - bizDate : Date
+    - basePrice : Money
+    - finalPrice : Money
+  }
+  class "关房记录 RoomClosure" as RoomClosure {
+    - startDate : Date
+    - endDate : Date
+    - reason : String
+  }
+  class "协议锁房 GroupLock" as GroupLock {
+    - startDate : Date
+    - endDate : Date
+    - qty : int
+    - status : String
+  }
+}
+
+package "预订与订单  M3" {
+  class "客人 Guest" as Guest {
+    - guestId : String
+    - name : String
+    - phoneMasked : String
+  }
+  class "订单 Order" as Order {
+    - orderNo : String
+    - status : String
+    - payMode : String
+    - totalAmount : Money
+    - expireAt : DateTime
+    + confirm() : void
+    + cancel(reason : String) : void
+  }
+  class "订单房明细 OrderItem" as OrderItem {
+    - roomTypeName : String
+    - checkIn : Date
+    - checkOut : Date
+    - qty : int
+    - unitPrice : Money
+  }
+}
+
+package "支付与结算  M4" {
+  class "支付流水 Payment" as Payment {
+    - paymentNo : String
+    - amount : Money
+    - method : String
+    - status : String
+  }
+  class "退款流水 Refund" as Refund {
+    - refundNo : String
+    - amount : Money
+    - status : String
+    - approverId : String
+  }
+}
+
+Hotel "1" -- "*" RoomType : 拥有 >
+RoomType "1" -- "*" DailyInventory : 按日核算 >
+RoomType "1" -- "*" DailyPrice : 每日报价 >
+RoomType "1" -- "*" RoomClosure : 关房 >
+RoomType "1" -- "*" GroupLock : 协议锁房 >
+
+Guest "1" -- "*" Order : 下单 >
+Order "1" *-- "1..*" OrderItem : 包含 >
+Order "1" -- "*" Payment : 支付 >
+Order "1" -- "*" Refund : 退款 >
+
+note bottom of Hotel
+  支撑实体（本图未展开，见报告"数据字典"）：
+  Staff、Role、StaffHotel、OperationLog、
+  OrderChange、Cancellation、ReconciliationBill
+end note
+
+note right of DailyInventory
+  <b>唯一键</b> (hotelId, roomTypeId, bizDate)
+  available = total - sold - locked ≥ 0
+  并发以条件更新 + version 乐观锁保证
+end note
+
+note bottom of OrderItem
+  下单时写入房型名称、单价、金额快照；
+  基础资料变更不影响历史订单（REQ-036）
+end note
+
+note bottom of Order
+  状态取值：待支付 / 已确认待入住 / 已入住 / 正常离店 /
+  已取消 / 客人未到店 / 异常订单（REQ-016）；
+  已入住、正常离店禁止改单与取消（REQ-017）
+end note
+
+note bottom of Refund
+  前台单笔退款 > 500 元
+  须门店店长审批（REQ-023）
+end note
+
+@enduml

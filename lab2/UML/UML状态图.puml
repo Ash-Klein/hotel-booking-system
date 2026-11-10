@@ -1,0 +1,69 @@
+@startuml UML状态图
+skinparam defaultFontName "Microsoft YaHei"
+skinparam dpi 200
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam roundCorner 10
+skinparam ArrowColor #1F3A5F
+skinparam ArrowFontColor #1F3A5F
+skinparam ArrowFontSize 12
+skinparam stateBorderColor #1F3A5F
+skinparam stateBackgroundColor #F7F9FC
+skinparam stateFontColor #1F3A5F
+skinparam stateFontSize 14
+skinparam noteBackgroundColor #FFF8E1
+skinparam noteBorderColor #C9A227
+skinparam noteFontColor #5D4037
+skinparam nodesep 35
+skinparam ranksep 55
+left to right direction
+title 图3-4  订单状态图（7 状态）
+
+state "待支付" as PENDING
+state "已确认待入住" as CONFIRMED
+state "已入住" as CHECKED_IN
+state "正常离店" as CHECKED_OUT
+state "已取消" as CANCELLED
+state "客人未到店\nNo-show" as NO_SHOW
+state "异常订单" as EXCEPTION
+
+[*] --> PENDING : 创建订单\n锁房开始
+PENDING --> CONFIRMED : 支付成功 [线上预付] / 扣减库存
+PENDING --> CONFIRMED : 前台确认 [到店现付] / 生成确认单
+PENDING --> CANCELLED : 取消 / 释放库存
+
+CONFIRMED --> CHECKED_IN : 核验身份并分房 / 写房号
+CONFIRMED --> CANCELLED : 客人或前台取消 [按取消规则] / 退款
+CONFIRMED --> NO_SHOW : 夜审 [当日 24:00 未到店] / 释放库存
+CONFIRMED --> EXCEPTION : 到店无房 / 门店停业
+
+CHECKED_IN --> CHECKED_OUT : 查房核销 / 释放库存
+CHECKED_IN --> EXCEPTION : 在店纠纷
+
+EXCEPTION --> CANCELLED : 处置完成 [退款]
+EXCEPTION --> CHECKED_OUT : 处置完成 [安置入住]
+
+CANCELLED --> [*]
+CHECKED_OUT --> [*]
+NO_SHOW --> [*]
+
+note right of PENDING
+  线上预付：15 分钟支付倒计时
+  到店现付：30 分钟前台确认
+  两者互不干扰（REQ-018）
+  取消的三种来源：超时未支付、
+  前台未确认、客人主动取消
+end note
+
+note right of CONFIRMED
+  禁止：已入住 → 已取消
+  禁止：已入住 / 正常离店 → 改单、改金额
+  （REQ-017、REQ-037）
+end note
+
+note bottom of EXCEPTION
+  异常订单由前台 / 集团人工处置，
+  处置结果必须留痕（REQ-027、REQ-030）
+end note
+
+@enduml

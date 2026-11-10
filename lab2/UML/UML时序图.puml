@@ -1,0 +1,63 @@
+@startuml UML时序图
+skinparam defaultFontName "Microsoft YaHei"
+skinparam dpi 200
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam ArrowColor #1F3A5F
+skinparam ArrowFontColor #1F3A5F
+skinparam ArrowFontSize 12
+skinparam sequenceMessageAlign left
+skinparam sequenceParticipantBorderColor #1F3A5F
+skinparam sequenceParticipantBackgroundColor #DCE6F2
+skinparam sequenceParticipantFontColor #1F3A5F
+skinparam sequenceLifeLineBorderColor #1F3A5F
+skinparam actorBorderColor #1F3A5F
+skinparam noteBackgroundColor #FFF8E1
+skinparam noteBorderColor #C9A227
+skinparam noteFontColor #5D4037
+title 图3-6  最后一间房并发下单时序图
+autonumber
+
+actor "顾客 A" as A
+actor "顾客 B" as B
+participant "预订服务" as BOOK
+participant "库存服务" as INV
+database "MySQL 库存表" as DB
+participant "支付网关" as PAY
+participant "定时任务" as JOB
+
+A -> BOOK : 提交订单（房型 X，1 间）
+B -> BOOK : 提交订单（房型 X，1 间）
+BOOK -> BOOK : 幂等校验（订单号 + 请求号）
+BOOK -> INV : reserve(订单 A，1)
+INV -> DB : UPDATE daily_inventory\nSET locked = locked + 1\nWHERE total - sold - locked >= 1
+DB --> INV : 影响行数 = 1
+INV --> BOOK : 预占成功
+BOOK --> A : 锁房 15 分钟，跳转支付
+
+BOOK -> INV : reserve(订单 B，1)
+INV -> DB : 同条件更新
+DB --> INV : 影响行数 = 0
+INV --> BOOK : 无房
+BOOK --> B : 提示"最后一间已售出"\n保留已填信息（REQ-051）
+
+A -> PAY : 支付
+PAY --> BOOK : 支付成功回调
+BOOK -> INV : confirm(订单 A，1)
+INV -> DB : sold + 1，locked - 1
+BOOK --> A : 订单已确认
+
+alt 15 分钟内未支付
+  JOB -> BOOK : 扫描超时订单
+  BOOK -> INV : release(订单 A，1)
+  INV -> DB : locked - 1
+  BOOK --> A : 订单自动取消
+end
+
+note over DB
+  数据库条件更新保证只有一单成功；
+  Redis 仅作热点缓存与预占加速（见组件图），
+  不作为最终判定依据
+end note
+
+@enduml

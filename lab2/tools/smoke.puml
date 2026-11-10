@@ -1,0 +1,24 @@
+@startuml
+!pragma layout smetana
+skinparam defaultFontName "Microsoft YaHei"
+skinparam dpi 150
+title 环境自检：类图渲染（中文 / Smetana 布局）
+class 门店 {
+  +门店编号: String
+  +所属城市: String
+}
+class 房型 {
+  +房型编号: String
+  +床型: String
+}
+class 每日库存 {
+  +营业日期: Date
+  +总量: int
+  +已售: int
+  +已锁: int
+  +可售() : int
+}
+门店 "1" -- "*" 房型
+房型 "1" -- "*" 每日库存
+note right of 每日库存 : 唯一键（门店+房型+日期）\n可售 = 总量 - 已售 - 已锁
+@enduml
