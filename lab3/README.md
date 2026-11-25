@@ -5,28 +5,36 @@
 - 学号：241220053
 - 姓名：黄若希
 - 技术栈：Python 3.12 + Tkinter + SQLite（仅标准库，无第三方运行时依赖）
-- 源代码规模：约 1.09 万有效行（`python tools/check_style.py` 统计，含测试）
+- 源代码规模：约 1.10 万有效行（`python tools/check_style.py` 统计，含测试）
 - 测试：`unittest` 29 项，覆盖库存、并发防超卖、状态机、取消退款、改单、履约、权限、审计与报表
 
 ## 1. 运行
 
+客人端和员工端是两个**独立程序**，分别启动：
+
 ```powershell
 cd lab3
+
+# 客人端：390×844 竖屏手机预订
+python run_guest.py
+
+# 员工端：门店 / 集团桌面工作台
 python run.py
 ```
 
-首次运行会自动创建 `data/hotel.db`，写入 6 家门店、18 个房型、45 天库存/价格、5 个员工账号和 6 笔演示订单。无需安装依赖。
+首次运行会自动创建 `data/hotel.db`，写入 6 家门店、18 个房型、45 天库存/价格、5 个员工账号和 6 笔演示订单。无需安装依赖。两个程序共享同一个数据库，但窗口、入口、导航完全独立。
 
 如需使用全新数据库：
 
 ```powershell
 Remove-Item data\hotel.db -Force -ErrorAction SilentlyContinue
-python run.py
+python run_guest.py   # 或 python run.py
 ```
 
 也可以指定数据库路径：
 
 ```powershell
+python run_guest.py --db data/my_demo.db
 python run.py --db data/my_demo.db
 ```
 
@@ -40,13 +48,14 @@ python run.py --db data/my_demo.db
 | 集团运营 | `admin` | `Admin@123` | 全部门店，可配置特殊日期 |
 | 城市经理 | `city` | `City@123` | 上海 3 店，只读 |
 
-客人端不需要登录，从登录页点击“客人端”即可。
+客人端不需要登录，直接启动 `run_guest.py`；员工端登录页没有客人端入口。
 
 ## 3. 功能范围
 
-### 客人端
+### 客人端（独立竖屏客户端）
 
-- 按城市、日期、人数、每晚最高价、是否含早查询；结果标注每晚价、总价和不可订原因
+- 390×844 竖屏窗口，顶部品牌栏 + 底部“查房/订单”导航，对应实验二小程序稿
+- 按城市、日期、人数、每晚最高价、是否含早查询；卡片式结果标注每晚价、总价和不可订原因
 - 房型详情展示逐晚价格、剩余库存、特殊日期与取消政策
 - 创建订单并逐晚锁定库存；线上预付 15 分钟、到店现付 30 分钟
 - 手机号查询订单、模拟支付、自助改期/改房型/同城改店、取消并查看违约金
@@ -80,7 +89,7 @@ python run.py --db data/my_demo.db
 | 订单状态机 | `domain/enums.py::ORDER_TRANSITIONS` | 只允许白名单转换，其余抛 `StateTransitionError` |
 | 应用服务 | `services/` | 认证、查询报价、预订交易、履约、库存管理、退款、报表 |
 | 仓储 | `repositories/` | SQL 集中在仓储层，服务层不拼 SQL |
-| 表现层 | `ui/` | 登录、客人端、门店端、集团端，共 4 个主壳 |
+| 表现层 | `ui/` | 独立竖屏客人端、员工登录、门店端、集团端 |
 
 完整实现类图见 `UML/UML实现类图.puml`，实验二核心类图见 `UML/UML类图.puml`。
 
@@ -88,13 +97,18 @@ python run.py --db data/my_demo.db
 
 ```
 lab3/
-├── run.py                      # 启动脚本
+├── run_guest.py                # 客人端启动脚本（独立竖屏程序）
+├── run.py                      # 员工端启动脚本（门店/集团）
 ├── hotel_booking/
 │   ├── domain/                 # 实体、枚举、金额/脱敏、领域异常
 │   ├── infrastructure/         # SQLite、Schema、种子数据、密码哈希
 │   ├── repositories/           # 7 个仓储 + 行映射
 │   ├── services/               # 7 个应用服务 + 组合根 + 演示数据
-│   └── ui/                     # Tkinter 登录、客人端、门店端、集团端
+│   └── ui/
+│       ├── mobile_guest.py     # 390×844 客人端页面与底部导航
+│       ├── login_view.py       # 员工登录（无客人端入口）
+│       ├── staff_view.py       # 门店端
+│       └── admin_view.py       # 集团端
 ├── tests/test_booking.py       # 29 项 unittest
 ├── tools/check_style.py        # 项目内代码风格检查
 ├── tools/capture_screens.py    # 报告截图生成（开发辅助）
@@ -121,8 +135,9 @@ python tools/check_style.py
 - **SQLite 而非内存字典**：为了让事务、唯一键、条件更新和审计真正落地，而不是只在服务层“看起来正确”。
 - **金额用 Decimal + TEXT**：避免浮点误差进入退款和对账。
 - **服务层持有事务边界**：库存锁定、订单写入、审计写入要么同时成功，要么同时回滚。
+- **两个独立程序而非一个窗口切角色**：客人端是 390×844 竖屏程序，员工端是 1360×860 桌面程序；共享数据库和服务层，但入口、窗口、导航互不混用。
 - **Tkinter 而非 Web**：实验四、五要继续做静态分析和测试，桌面程序更容易在本地复现；同时不引入前端构建链。
-- **无第三方运行时依赖**：降低安装成本，让助教可以直接 `python run.py`。
+- **无第三方运行时依赖**：降低安装成本，让助教可以直接 `python run_guest.py` / `python run.py`。
 
 ## 8. 已知限制
 

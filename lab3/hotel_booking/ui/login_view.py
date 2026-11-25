@@ -180,12 +180,14 @@ class LoginView(tk.Frame):
         )
         for entry in (username, self.password_entry):
             entry.bind("<Return>", lambda _: self._login())
-        ttk.Button(
+        tk.Label(
             card.inner,
-            text="客人端 · 无需登录，直接查房预订  →",
-            style="Ghost.TButton",
-            command=lambda: self.app.show_guest(),
-        ).pack(anchor="e", pady=(10, 0))
+            text="内部员工系统 · 客人预订请使用独立的手机客户端",
+            bg=COLORS["card"],
+            fg=COLORS["muted"],
+            font=(self.font, 8),
+            anchor="w",
+        ).pack(fill="x", pady=(12, 0))
         tk.Label(
             holder,
             text="演示账号（点击自动填入）",

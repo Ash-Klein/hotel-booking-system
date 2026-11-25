@@ -10,10 +10,13 @@ DATA_DIR = ROOT_DIR / "data"
 REPORT_DIR = ROOT_DIR / "data" / "exports"
 DEFAULT_DB_PATH = DATA_DIR / "hotel.db"
 
-APP_NAME = "云栖酒店集团 · 预订管理系统"
+APP_NAME = "云栖酒店集团 · 运营工作台"
+STAFF_APP_NAME = "云栖酒店集团 · 运营工作台"
+GUEST_APP_NAME = "云栖酒店 · 手机预订"
 APP_VERSION = "1.0.0"
 DEFAULT_FONT = "Microsoft YaHei UI"
 WINDOW_SIZE = "1360x860"
+GUEST_WINDOW_SIZE = "390x844"
 MIN_WINDOW_SIZE = (1180, 720)
 
 

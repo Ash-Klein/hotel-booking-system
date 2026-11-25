@@ -18,7 +18,12 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
-TARGETS = [ROOT / "hotel_booking", ROOT / "tests", ROOT / "run.py"]
+TARGETS = [
+    ROOT / "hotel_booking",
+    ROOT / "tests",
+    ROOT / "run.py",
+    ROOT / "run_guest.py",
+]
 MAX_LINE = 100
 
 

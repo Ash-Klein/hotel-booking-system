@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime
 import tkinter as tk
-from tkinter import ttk
 
 from .. import config
-from ..domain.enums import Role
 from ..domain.models import Staff
 from ..services.app import Services
 from .theme import COLORS, configure_styles
@@ -23,7 +21,7 @@ class HotelBookingApp(tk.Tk):
         self.current_staff: Staff | None = None
         self.current_portal: object | None = None
         self.font_family = configure_styles(self)
-        self.title(config.APP_NAME)
+        self.title(config.STAFF_APP_NAME)
         self.geometry(config.WINDOW_SIZE)
         self.minsize(*config.MIN_WINDOW_SIZE)
         self.configure(bg=COLORS["bg"])
@@ -66,15 +64,6 @@ class HotelBookingApp(tk.Tk):
         self.current_portal = LoginView(self.container, self)
         self.current_portal.pack(fill="both", expand=True)
 
-    def show_guest(self, tab: str = "search") -> None:
-        """Display the guest-facing portal."""
-        from .guest_view import GuestPortal
-
-        self._clear()
-        self.current_staff = None
-        self.current_portal = GuestPortal(self.container, self, tab)
-        self.current_portal.pack(fill="both", expand=True)
-
     def login(self, username: str, password: str) -> Staff:
         """Authenticate and route to the correct back-office portal."""
         staff = self.services.auth.login(username, password)
@@ -100,11 +89,6 @@ class HotelBookingApp(tk.Tk):
     def notify(self, message: str, kind: str = "info") -> None:
         """Show a transient notification from any child view."""
         self.toast.show(message, kind)
-
-    def open_guest_orders(self, phone: str = "") -> None:
-        """Switch the guest portal to the order lookup tab."""
-        if self.current_portal and hasattr(self.current_portal, "show_orders"):
-            self.current_portal.show_orders(phone)  # type: ignore[attr-defined]
 
     # ------------------------------------------------------------------
     # Clock

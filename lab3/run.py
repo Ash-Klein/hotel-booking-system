@@ -1,4 +1,7 @@
-"""Start the hotel booking desktop application.
+"""Start the hotel staff/group desktop client.
+
+The guest client is a separate program; run ``python run_guest.py`` for the
+portrait mobile-style booking application.
 
 Usage:
     python run.py
@@ -14,7 +17,7 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line options."""
-    parser = argparse.ArgumentParser(description="云栖酒店预订管理系统")
+    parser = argparse.ArgumentParser(description="云栖酒店运营工作台")
     parser.add_argument(
         "--db",
         default="",
