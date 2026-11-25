@@ -221,11 +221,13 @@ package "repositories 仓储与基础设施" as REPO {
 }
 
 package "ui 表现层" as UI {
-  class "HotelBookingApp" as HotelBookingApp
-  class "LoginView" as LoginView
-  class "GuestPortal" as GuestPortal
-  class "StaffShell" as StaffShell
-  class "AdminShell" as AdminShell
+  class "HotelBookingApp 员工端" as HotelBookingApp
+  class "LoginView 员工登录" as LoginView
+  class "GuestApplication 客人端" as GuestApplication
+  class "MobileSearchPage 查房" as MobileSearchPage
+  class "MobileOrdersPage 订单" as MobileOrdersPage
+  class "StaffShell 门店端" as StaffShell
+  class "AdminShell 集团端" as AdminShell
 }
 
 Hotel "1" -- "*" RoomType : 拥有
@@ -301,9 +303,9 @@ note bottom of Refund
 end note
 
 note right of UI
-  源代码规模：约 1.09 万有效行（不含第三方库），
-  其中 Tkinter 界面约 4,200 行，
-  领域 / 服务 / 仓储 / 基础设施约 6,700 行。
+  源代码规模：约 1.10 万有效行（不含第三方库），
+  其中 Tkinter 界面约 4,735 行，
+  领域 / 服务 / 仓储 / 基础设施约 5,756 行。
 end note
 
 @enduml

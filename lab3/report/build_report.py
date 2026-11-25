@@ -282,17 +282,17 @@ def abstract(doc: Document) -> None:
     body(
         doc,
         "本实验以实验二的需求规格和 UML 类图为输入，采用 Python 3.12、Tkinter 与 "
-        "SQLite 实现了一个可运行的酒店预订系统。系统包含客人端、门店端和集团端三个"
-        "桌面客户端，覆盖查房报价、逐晚锁房、线上预付与到店现付、订单状态机、改单与"
-        "部分取消、退款审批、入住退房、协议锁房、库存修正、审计日志和经营报表等主链"
-        "功能。实现遵循分层结构：domain 负责实体与不变式，services 负责用例与事务"
-        "边界，repositories 负责 SQL 与行映射，infrastructure 负责数据库和种子数据，"
-        "ui 只调用服务层。",
+        "SQLite 实现了一个可运行的酒店预订系统。系统由一个独立的竖屏客人端"
+        "（390×844）和门店端、集团端两个桌面客户端组成，覆盖查房报价、逐晚锁房、"
+        "线上预付与到店现付、订单状态机、改单与部分取消、退款审批、入住退房、"
+        "协议锁房、库存修正、审计日志和经营报表等主链功能。实现遵循分层结构："
+        "domain 负责实体与不变式，services 负责用例与事务边界，repositories 负责 "
+        "SQL 与行映射，infrastructure 负责数据库和种子数据，ui 只调用服务层。",
     )
     body(
         doc,
-        "代码规模为 10,894 个有效源代码行（不含开发辅助脚本），其中界面 4,606 行、"
-        "领域/基础设施/仓储/服务 5,753 行、测试 505 行。29 项 unittest 全部通过，"
+        "代码规模为 11,061 个有效源代码行（不含开发辅助脚本），其中界面 4,735 行、"
+        "领域/基础设施/仓储/服务 5,756 行、测试 505 行。29 项 unittest 全部通过，"
         "覆盖两人并发抢最后一间房、跨日库存扣减与返还、七种订单状态转换、"
         "24 小时取消规则、500 元退款审批线、特殊日期、部分取消、改单原子性、"
         "权限隔离和审计留痕。项目自带的风格检查报告 0 个问题，代码已提交到 GitHub "
@@ -351,9 +351,10 @@ def chapter_one(doc: Document) -> None:
             ["实验报告", "实验报告.pdf", "本文件"],
             ["UML 类图", "UML/UML类图.png / .puml", "实验二核心类图"],
             ["实现类图", "UML/UML实现类图.png / .puml", "分层实现与依赖"],
-            ["源代码", "code/hotel_booking/", "5 个分层包，41 个 Python 文件"],
             ["测试", "code/tests/test_booking.py", "29 项 unittest"],
-            ["启动脚本", "code/run.py", "python run.py"],
+            ["启动脚本", "code/run.py、run_guest.py",
+             "员工端与客人端分别启动"],
+            ["源代码", "code/hotel_booking/", "5 个分层包 + 独立客人端"],
             ["使用说明", "code/README.md", "运行、账号、架构、限制"],
         ],
         widths=[1.4, 2.7, 3.1],
@@ -377,7 +378,8 @@ def chapter_two(doc: Document) -> None:
         "confirm、transition_to），把跨实体规则放进服务；",
         "先写服务方法签名和 docstring，明确前置条件、事务边界、抛出的领域异常，"
         "再补实现；",
-        "最后做 Tkinter 三端界面，页面只依赖 Services，不直接写 SQL。",
+        "最后分别实现竖屏客人端和桌面员工端，页面只依赖 Services，"
+        "不直接写 SQL。",
     ):
         bullet(doc, item)
     body(
@@ -449,8 +451,8 @@ def chapter_two(doc: Document) -> None:
              "inventory_repository.py、order_repository.py"],
             ["infrastructure", "连接管理、Schema、种子、密码哈希",
              "database.py、schema.py、seed.py"],
-            ["ui", "三端界面、表格、弹窗、截图",
-             "login_view.py、guest_view.py、staff_view.py"],
+            ["ui", "竖屏客人端 + 桌面员工端",
+             "mobile_guest.py、login_view.py、staff_view.py"],
         ],
         widths=[1.1, 3.6, 2.6],
     )
@@ -460,7 +462,7 @@ def chapter_two(doc: Document) -> None:
         "这种做法带来两个直接好处：第一，库存和订单规则可以在没有界面的情况下用 "
         "unittest 验证；第二，Tkinter 只负责收集输入和展示结果，替换成 Web 前端时"
         "不需要重写业务规则。完整实现类图包含 17 个领域类、7 个应用服务、"
-        "7 个仓储和 5 个界面壳，见 UML/UML实现类图.png。",
+        "7 个仓储和多个界面组件，见 UML/UML实现类图.png。",
     )
     body(
         doc,
@@ -472,10 +474,10 @@ def chapter_two(doc: Document) -> None:
     body(
         doc,
         "代码规模按“非空、非注释行”统计，统计脚本为 tools/check_style.py。"
-        "应用代码 10,359 行，测试 505 行，启动入口 30 行，合计 10,894 行；"
-        "如果不计 Tkinter 界面，业务与基础设施代码为 5,753 行，仍远高于 1,500 行"
-        "的要求。界面代码较多，是因为三端都实现了真实表格、表单、弹窗和状态反馈，"
-        "不是设计稿截图。",
+        "应用代码 10,491 行，测试 505 行，两个启动入口 65 行，合计 11,061 行；"
+        "如果不计 Tkinter 界面，业务与基础设施代码为 5,756 行，仍远高于 1,500 行"
+        "的要求。界面代码较多，是因为客人端是独立竖屏客户端，员工端实现了真实表格、"
+        "表单、弹窗和状态反馈，不是设计稿截图。",
     )
     table(
         doc,
@@ -485,11 +487,11 @@ def chapter_two(doc: Document) -> None:
             ["infrastructure", "601", "SQLite 连接与事务、Schema、种子、密码哈希"],
             ["repositories", "1,858", "7 个仓储、条件更新、行映射、报表查询"],
             ["services", "2,435", "7 个应用服务、权限、审计、演示数据"],
-            ["ui", "4,606", "登录、客人端、门店端、集团端、对话框、主题"],
-            ["应用入口与配置", "28", "__init__、config、main"],
+            ["ui", "4,735", "竖屏客人端、登录、门店端、集团端、对话框、主题"],
+            ["应用入口与配置", "31", "__init__、config、main"],
             ["tests", "505", "29 项 unittest"],
-            ["run.py", "30", "命令行入口"],
-            ["合计", "10,894", "不含开发辅助脚本 196 行"],
+            ["run.py / run_guest.py", "65", "两个独立命令行入口"],
+            ["合计", "11,061", "不含开发辅助脚本"],
         ],
         widths=[1.6, 1.1, 3.9],
     )
@@ -603,26 +605,27 @@ def chapter_three(doc: Document) -> None:
         "台账中裁决，选择“取消并全额退款”或“按正常离店归档”。异常记录保留，"
         "不删除原订单和库存占用。",
     )
-    heading(doc, "3.5  三端界面", 2)
+    heading(doc, "3.5  两个相互独立的前端", 2)
     body(
         doc,
-        "界面使用 Tkinter 实现，共 4,606 个有效行。登录页按角色路由：门店前台和"
-        "店长进入门店工作台，集团财务、运营和城市经理进入集团端。客人端不需要"
-        "登录，用手机号查询订单。所有页面共享一套颜色、表格、表单和弹窗组件；"
-        "表格封装为 DataTable，支持斑马纹、状态颜色、双击和横向滚动。",
+        "客人端和员工端是两个独立 Tk 程序：客人端由 run_guest.py 启动，"
+        "固定 390×844 竖屏，顶部品牌栏、底部“查房/订单”导航；员工端由 run.py "
+        "启动，使用 1360×860 桌面布局，登录页只保留员工账号，不提供客人入口。"
+        "两端共享 SQLite 数据库和服务层，但前端完全独立。",
     )
     table(
         doc,
-        ["端", "主要页面", "关键交互"],
+        ["客户端", "入口 / 形态", "主要页面与交互"],
         [
-            ["客人端", "查房、房型详情、填单、我的订单",
-             "逐晚价格、库存不足原因、支付/取消/改期/详情"],
-            ["门店端", "工作台、订单办理、库存房价、协议锁房、退款审核、日志",
-             "确认现付、分房入住、查房退房、改价、关房、库存修正"],
-            ["集团端", "总览、经营报表、异常台账、审计日志、门店房型",
-             "趋势图、门店下钻、退款审批、异常裁决、CSV 导出"],
+            ["客人端", "run_guest.py · 390×844 竖屏",
+             "查房卡片、房型详情、填单支付、我的订单、改期/取消"],
+            ["门店端", "run.py · 桌面 1360×860 · 前台/店长",
+             "工作台、订单办理、库存房价、协议锁房、退款审核、日志"],
+            ["集团端", "run.py · 桌面 1360×860 · 财务/运营/城市经理",
+             "总览、经营报表、异常台账、审计日志、门店房型"],
         ],
-        widths=[0.9, 3.3, 3.3],
+        widths=[1.0, 2.4, 3.1],
+        font_size=8.0,
     )
 
 
@@ -736,15 +739,21 @@ def chapter_five(doc: Document) -> None:
     heading(doc, "5.1  启动方式", 2)
     body(
         doc,
-        "项目只依赖 Python 3.12 标准库，不需要 pip 安装运行时依赖。在 lab3 目录"
-        "执行以下命令，首次启动会自动建库、写入 6 家门店、18 个房型、45 天库存、"
-        "5 个员工账号和 6 笔演示订单。",
+        "项目只依赖 Python 3.12 标准库，不需要 pip 安装运行时依赖。客人端和员工端"
+        "是两个独立程序，在 lab3 目录分别启动；首次启动会自动建库、写入 6 家门店、"
+        "18 个房型、45 天库存、5 个员工账号和 6 笔演示订单。",
     )
-    code_block(doc, "cd lab3\npython run.py")
+    code_block(
+        doc,
+        "# 客人端：390×844 竖屏手机预订\n"
+        "python run_guest.py\n\n"
+        "# 员工端：门店/集团桌面工作台\n"
+        "python run.py",
+    )
     body(
         doc,
-        "如果需要干净数据库，删除 data/hotel.db 后重新运行；也可以使用 "
-        "python run.py --db data/my_demo.db 指定路径。",
+        "如果需要干净数据库，删除 data/hotel.db 后重新运行；两个入口都支持 "
+        "--db data/my_demo.db 指定数据库路径。",
     )
     heading(doc, "5.2  演示账号", 2)
     table(
@@ -759,27 +768,28 @@ def chapter_five(doc: Document) -> None:
         ],
         widths=[1.3, 1.4, 1.8, 2.2],
     )
-    heading(doc, "5.3  运行界面", 2)
+    heading(doc, "5.3  运行界面", 2, new_page=True)
     body(
         doc,
         "以下截图来自实际运行的程序，演示库由 seed + 服务层真实下单生成，"
         "不是静态设计稿。",
     )
-    picture(doc, SCREEN / "01-login.png", 6.0, "图 5-1  员工登录页与演示账号")
-    picture(doc, SCREEN / "02-guest-search.png", 6.2, "图 5-2  客人端查房结果")
-    picture(doc, SCREEN / "03-room-detail.png", 6.0, "图 5-3  房型详情与逐晚价格")
+    picture(doc, SCREEN / "01-login.png", 4.0,
+            "图 5-1  员工端登录页（客人端为独立程序，无入口）")
+    picture(doc, SCREEN / "02-guest-flow.png", 5.2,
+            "图 5-2  独立竖屏客人端：390×844 查房与房型详情")
     picture(doc, SCREEN / "04-staff-workbench.png", 6.2,
-            "图 5-4  门店工作台：到店、离店、在住与今日收款")
+            "图 5-3  门店工作台：到店、离店、在住与今日收款")
     picture(doc, SCREEN / "05-inventory.png", 6.2,
-            "图 5-5  库存与房价：总量、已售、订单锁定、协议锁定、可售")
+            "图 5-4  库存与房价：总量、已售、订单锁定、协议锁定、可售")
     picture(doc, SCREEN / "07-refund-approval.png", 6.2,
-            "图 5-6  退款审核：两笔超过 500 元的退款等待审批")
+            "图 5-5  退款审核：两笔超过 500 元的退款等待审批")
     picture(doc, SCREEN / "08-admin-overview.png", 6.2,
-            "图 5-7  集团总览：门店数、订单、营收、出租率与近 7 天趋势")
+            "图 5-6  集团总览：门店数、订单、营收、出租率与近 7 天趋势")
     picture(doc, SCREEN / "09-operation-report.png", 6.2,
-            "图 5-8  经营报表：门店维度订单量、间夜、营收、ADR、取消率")
+            "图 5-7  经营报表：门店维度订单量、间夜、营收、ADR、取消率")
     picture(doc, SCREEN / "10-audit-log.png", 6.2,
-            "图 5-9  审计日志：登录、下单、支付、入住、退款等操作均可追溯")
+            "图 5-8  审计日志：登录、下单、支付、入住、退款等操作均可追溯")
     heading(doc, "5.4  单元测试结果", 2)
     body(
         doc,
@@ -807,14 +817,14 @@ def chapter_five(doc: Document) -> None:
     body(
         doc,
         "项目内 tools/check_style.py 检查 100 列行宽、行尾空白、制表符、模块/类"
-        "文档、顶层函数文档、裸 except 和 TODO 标记。当前检查 43 个 Python 文件，"
-        "有效行 10,894，问题 0 个。pyproject.toml 同时保留 Pylint 配置"
+        "文档、顶层函数文档、裸 except 和 TODO 标记。当前检查 44 个 Python 文件，"
+        "有效行 11,061，问题 0 个。pyproject.toml 同时保留 Pylint 配置"
         "（max-line-length=100），方便在有网络的环境复现。",
     )
     code_block(
         doc,
-        "检查文件：43 个\n"
-        "有效源代码行：10894\n"
+        "检查文件：44 个\n"
+        "有效源代码行：11061\n"
         "风格检查通过：0 个问题",
     )
     body(
@@ -838,7 +848,7 @@ def chapter_six(doc: Document) -> None:
         doc,
         "git switch -c lab3\n"
         "git add lab3 .gitignore\n"
-        "git commit -m \"feat(lab3): 实现酒店预订系统三端桌面应用\"\n"
+        "git commit -m \"feat(lab3): 客人端改为独立 390x844 竖屏客户端\"\n"
         "git push -u origin lab3",
     )
     table(
@@ -846,8 +856,8 @@ def chapter_six(doc: Document) -> None:
         ["项目", "结果"],
         [
             ["当前分支", "lab3（跟踪 origin/lab3）"],
-            ["代码提交", "ec3a928  feat(lab3): 实现酒店预订系统三端桌面应用"],
-            ["上一提交", "6b4c300  docs(lab2): 增加实验二报告源文与 UML 裁白边"],
+            ["代码提交", "9a2328c  feat(lab3): 客人端改为独立 390x844 竖屏客户端"],
+            ["上一提交", "3c50616  docs(lab3): 实验三报告、界面截图与生成脚本"],
             ["远程仓库", "https://github.com/Ash-Klein/hotel-booking-system"],
             ["远程分支", "origin/lab3"],
             ["分支页面", "https://github.com/Ash-Klein/hotel-booking-system/tree/lab3"],
@@ -872,8 +882,9 @@ def chapter_six(doc: Document) -> None:
     body(
         doc,
         "本实验完成了从 UML 到可运行系统的闭环：11 个核心实体、17 个领域类、"
-        "7 个应用服务、7 个仓储、3 个客户端，共 10,894 个有效源代码行；"
-        "29 项测试全部通过，风格检查 0 问题；代码已推送到 GitHub。",
+        "7 个应用服务、7 个仓储、1 个竖屏客人端和 1 套桌面员工端，"
+        "共 11,061 个有效源代码行；29 项测试全部通过，风格检查 0 问题；"
+        "代码已推送到 GitHub。",
     )
     body(
         doc,
@@ -921,9 +932,10 @@ def appendix(doc: Document) -> None:
     heading(doc, "附录 B  复现实验的命令", 2)
     code_block(
         doc,
-        "# 1. 运行\n"
+        "# 1. 运行（两个独立程序）\n"
         "cd lab3\n"
-        "python run.py\n\n"
+        "python run_guest.py   # 竖屏客人端\n"
+        "python run.py         # 门店/集团桌面端\n\n"
         "# 2. 测试\n"
         "$env:PYTHONPATH=\".\"\n"
         "python -m unittest discover -s tests -v\n\n"
