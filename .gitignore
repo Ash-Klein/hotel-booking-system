@@ -56,11 +56,13 @@ lab2/*.zip
 __pycache__/
 *.pyc
 
-# ===== 实验三（源代码需要入库，覆盖上面的全局 *.py） =====
+# 实验三（源代码需要入库，覆盖上面的全局 *.py）
 !lab3/**/*.py
 !lab3/*.py
 !lab3/tools/*.py
 lab3/data/
 lab3/.test_tmp/
 lab3/.tmppip/
+实验3_*.zip
+debug.log
 
