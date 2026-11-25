@@ -18,7 +18,9 @@ CREATE TABLE IF NOT EXISTS hotels (
     address         TEXT NOT NULL,
     franchise_type  TEXT NOT NULL CHECK (franchise_type IN ('DIRECT', 'FRANCHISE')),
     phone           TEXT NOT NULL,
-    status          TEXT NOT NULL DEFAULT 'OPEN'
+    status          TEXT NOT NULL DEFAULT 'OPEN',
+    star            INTEGER NOT NULL DEFAULT 4,
+    rating          TEXT NOT NULL DEFAULT '4.6'
 );
 
 CREATE TABLE IF NOT EXISTS room_types (
@@ -29,7 +31,8 @@ CREATE TABLE IF NOT EXISTS room_types (
     capacity        INTEGER NOT NULL CHECK (capacity > 0),
     breakfast       INTEGER NOT NULL CHECK (breakfast IN (0, 1)),
     base_price      TEXT NOT NULL,
-    status          TEXT NOT NULL DEFAULT 'ON_SALE'
+    status          TEXT NOT NULL DEFAULT 'ON_SALE',
+    area_sqm        INTEGER NOT NULL DEFAULT 28
 );
 
 CREATE TABLE IF NOT EXISTS daily_inventory (
@@ -101,9 +104,17 @@ CREATE TABLE IF NOT EXISTS orders (
     contact_phone   TEXT NOT NULL,
     expire_at       TEXT,
     assigned_rooms  TEXT NOT NULL DEFAULT '',
+    arrival_time    TEXT NOT NULL DEFAULT '',
     version         INTEGER NOT NULL DEFAULT 0,
     created_at      TEXT NOT NULL,
     updated_at      TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS order_guests (
+    order_no        TEXT NOT NULL REFERENCES orders(order_no) ON DELETE CASCADE,
+    seq             INTEGER NOT NULL,
+    name            TEXT NOT NULL,
+    PRIMARY KEY (order_no, seq)
 );
 
 CREATE TABLE IF NOT EXISTS order_items (

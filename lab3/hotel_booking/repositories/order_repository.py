@@ -112,7 +112,9 @@ class OrderRepository:
             )
         )
         item = order_item_from_row(item_row) if item_row else None
-        return order_from_row(row, item)
+        order = order_from_row(row, item)
+        order.guest_names = self.list_guest_names(order_no, connection)
+        return order
 
     def require(
         self, order_no: str, connection: sqlite3.Connection | None = None
@@ -134,8 +136,8 @@ class OrderRepository:
                 (order_no, guest_id, hotel_id, room_type_id, room_type_name,
                  check_in, check_out, status, pay_mode, total_amount,
                  contact_name, contact_phone, expire_at, assigned_rooms,
-                 version, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 arrival_time, version, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 order.order_no,
@@ -152,6 +154,7 @@ class OrderRepository:
                 order.contact_phone,
                 datetime_text(order.expire_at),
                 order.assigned_rooms,
+                order.arrival_time,
                 order.version,
                 datetime_text(order.created_at),
                 datetime_text(order.updated_at),
@@ -184,7 +187,7 @@ class OrderRepository:
                SET hotel_id = ?, room_type_id = ?, room_type_name = ?,
                    check_in = ?, check_out = ?, status = ?, pay_mode = ?,
                    total_amount = ?, contact_name = ?, contact_phone = ?,
-                   expire_at = ?, assigned_rooms = ?,
+                   expire_at = ?, assigned_rooms = ?, arrival_time = ?,
                    version = version + 1, updated_at = ?
              WHERE order_no = ? AND version = ?
             """,
@@ -201,6 +204,7 @@ class OrderRepository:
                 order.contact_phone,
                 datetime_text(order.expire_at),
                 order.assigned_rooms,
+                order.arrival_time,
                 datetime_text(datetime.now()),
                 order.order_no,
                 order.version,
@@ -213,8 +217,7 @@ class OrderRepository:
 
     def update_item(
         self, connection: sqlite3.Connection, item: OrderItem
-    ) -> None:
-        connection.execute(
+    ) -> None:        connection.execute(
             """
             UPDATE order_items
                SET qty = ?, cancelled_qty = ?, unit_price = ?, breakfast = ?,
@@ -230,6 +233,36 @@ class OrderRepository:
                 item.item_id,
             ),
         )
+
+    def add_guests(
+        self,
+        connection: sqlite3.Connection,
+        order_no: str,
+        names: list[str],
+    ) -> None:
+        """Replace the registered guest names of one order."""
+        connection.execute(
+            "DELETE FROM order_guests WHERE order_no = ?", (order_no,)
+        )
+        for seq, name in enumerate(names, start=1):
+            connection.execute(
+                "INSERT INTO order_guests (order_no, seq, name) VALUES (?, ?, ?)",
+                (order_no, seq, name),
+            )
+
+    def list_guest_names(
+        self,
+        order_no: str,
+        connection: sqlite3.Connection | None = None,
+    ) -> list[str]:
+        """Return guest names in registration order."""
+        sql = "SELECT name FROM order_guests WHERE order_no = ? ORDER BY seq"
+        rows = (
+            connection.execute(sql, (order_no,)).fetchall()
+            if connection
+            else self.db.query(sql, (order_no,))
+        )
+        return [str(row["name"]) for row in rows]
 
     def search(
         self,
@@ -329,7 +362,9 @@ class OrderRepository:
             (row["order_no"],),
         )
         item = order_item_from_row(item_row) if item_row else None
-        return order_from_row(row, item)
+        order = order_from_row(row, item)
+        order.guest_names = self.list_guest_names(str(row["order_no"]))
+        return order
 
     def stats(self, hotel_id: str | None, biz_date: date) -> dict[str, int]:
         clauses = "WHERE 1 = 1"

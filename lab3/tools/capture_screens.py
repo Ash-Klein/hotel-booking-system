@@ -54,7 +54,7 @@ def grab(root: tk.Misc, name: str) -> Path:
 
 
 def build_guest_screens(db_path: Path) -> None:
-    """Capture the portrait guest search and detail pages."""
+    """Capture the six designed guest screens (01 - 05 plus 02A)."""
     services = create_services(db_path, demo=True)
     app = GuestApplication(services)
     app.attributes("-topmost", True)
@@ -62,17 +62,35 @@ def build_guest_screens(db_path: Path) -> None:
     app.update()
     time.sleep(0.7)
     app.update()
-    search = grab(app, "02-guest-search.png")
+    home = grab(app, "02-guest-home.png")
+
+    app.show_rooms()
+    app.update()
     page = app.current_page
-    page.app.show_detail(page.results[0])
+    results = page._filtered()
+    grab(app, "03-guest-rooms.png")
+
+    app.show_detail(results[0], 2)
     app.update()
-    time.sleep(0.4)
+    detail = grab(app, "04-guest-room-detail.png")
+
+    app.start_booking(results[0], 2)
     app.update()
-    detail = grab(app, "03-room-detail.png")
+    booking = app.current_page
+    booking.name_var.set("黄若希")
+    booking.phone_var.set("13800005300")
+    grab(app, "05-guest-booking.png")
+
+    booking._submit()
+    app.update()
+    grab(app, "06-guest-payment.png")
+    app.current_page._pay()
+    app.update()
+    grab(app, "07-guest-order.png")
     app.destroy()
 
     # A single composite keeps the report readable on one page.
-    left = Image.open(search)
+    left = Image.open(home)
     right = Image.open(detail)
     gap = 18
     canvas = Image.new(
@@ -122,6 +140,29 @@ def build_staff_screens(db_path: Path) -> None:
     app.destroy()
 
 
+def build_overview() -> None:
+    """Compose the guest and staff screenshots used by the brief report."""
+    guest = Image.open(OUTPUT / "02-guest-flow.png").convert("RGB")
+    staff = Image.open(OUTPUT / "04-staff-workbench.png").convert("RGB")
+    height = 620
+    guest_image = guest.resize(
+        (round(height * guest.width / guest.height), height), Image.LANCZOS
+    )
+    staff_image = staff.resize(
+        (round(height * staff.width / staff.height), height), Image.LANCZOS
+    )
+    gap, pad = 24, 14
+    canvas = Image.new(
+        "RGB",
+        (guest_image.width + gap + staff_image.width + pad * 2, height + pad * 2),
+        "#E8EDF2",
+    )
+    canvas.paste(guest_image, (pad, pad))
+    canvas.paste(staff_image, (pad + guest_image.width + gap, pad))
+    canvas.save(OUTPUT / "11-clients-overview.png")
+    print("saved 11-clients-overview.png")
+
+
 def main() -> None:
     """Run both clients through their pages and save PNGs."""
     OUTPUT.mkdir(parents=True, exist_ok=True)
@@ -132,6 +173,7 @@ def main() -> None:
             path.unlink()
     build_guest_screens(db_path)
     build_staff_screens(db_path)
+    build_overview()
     print(f"all screenshots saved to {OUTPUT}")
 
 

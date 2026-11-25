@@ -63,6 +63,8 @@ def hotel_from_row(row: sqlite3.Row) -> Hotel:
         franchise_type=row["franchise_type"],
         phone=row["phone"],
         status=HotelStatus(row["status"]),
+        star=int(row_value(row, "star", 4) or 4),
+        rating=as_money(row_value(row, "rating", "4.6") or "4.6"),
     )
 
 
@@ -77,6 +79,7 @@ def room_type_from_row(row: sqlite3.Row) -> RoomType:
         breakfast=bool(row["breakfast"]),
         base_price=as_money(row["base_price"]),
         status=RoomTypeStatus(row["status"]),
+        area_sqm=int(row_value(row, "area_sqm", 28) or 28),
     )
 
 
@@ -179,6 +182,7 @@ def order_from_row(
         contact_phone=row["contact_phone"],
         expire_at=_dt(row["expire_at"]),
         assigned_rooms=row["assigned_rooms"],
+        arrival_time=str(row_value(row, "arrival_time", "") or ""),
         version=int(row["version"]),
         created_at=_dt(row["created_at"]) or datetime.now(),
         updated_at=_dt(row["updated_at"]) or datetime.now(),

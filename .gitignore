@@ -64,5 +64,6 @@ lab3/data/
 lab3/.test_tmp/
 lab3/.tmppip/
 实验3_*.zip
+实验3_*/
 debug.log
 

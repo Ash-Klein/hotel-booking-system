@@ -101,14 +101,21 @@ class BookingService:
         check_out: date,
         qty: int,
         pay_mode: PayMode,
+        arrival_time: str = "",
+        guests: list[str] | None = None,
         now: datetime | None = None,
     ) -> Order:
-        """Create a pending order and lock every night atomically."""
+        """Create a pending order and lock every night atomically.
+
+        ``guests`` lists the additional occupants of the booked rooms; the
+        contact person is always the first registered guest.
+        """
         guest_name = guest_name.strip()
         phone = phone.strip()
         self._validate_guest(guest_name, phone)
         if not isinstance(pay_mode, PayMode):
             raise ValidationError("请选择支付方式")
+        extra_guests = self._validate_guests(guests or [])
         moment = now or datetime.now()
         with self.db.transaction() as connection:
             quote = self.catalog.quote(
@@ -143,6 +150,7 @@ class BookingService:
                 contact_name=guest_name,
                 contact_phone=phone,
                 expire_at=make_expiry(pay_mode, moment),
+                arrival_time=arrival_time,
                 version=0,
                 created_at=moment,
                 updated_at=moment,
@@ -158,6 +166,9 @@ class BookingService:
                     qty,
                 )
             self.orders.insert_order(connection, order, item)
+            self.orders.add_guests(
+                connection, order_no, [guest_name, *extra_guests]
+            )
             self.audit.write(
                 connection,
                 None,
@@ -641,6 +652,20 @@ class BookingService:
             raise ValidationError("入住人姓名须为 2 至 20 个字符")
         if not PHONE_PATTERN.match(phone):
             raise ValidationError("请输入有效的 11 位手机号")
+
+    @staticmethod
+    def _validate_guests(names: list[str]) -> list[str]:
+        """Normalise the extra occupant names of a multi-room booking."""
+        cleaned: list[str] = []
+        for raw in names:
+            name = (raw or "").strip()
+            if not name:
+                continue
+            if not 2 <= len(name) <= 20:
+                raise ValidationError("入住人姓名须为 2 至 20 个字符")
+            if name not in cleaned:
+                cleaned.append(name)
+        return cleaned
 
     def _find_or_create_guest(
         self,

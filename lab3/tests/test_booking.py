@@ -533,6 +533,53 @@ class AdministrationTests(ServiceTestCase):
         self.assertGreater(first.revenue, Decimal("0"))
 
 
+class GuestProfileTests(ServiceTestCase):
+    """Catalogue display fields and the guest details shown on screens 02-05."""
+
+    def test_catalog_exposes_star_rating_and_area(self) -> None:
+        hotel = self.services.catalog.hotel("H001")
+        self.assertEqual(hotel.star, 5)
+        self.assertEqual(f"{float(hotel.rating):.1f}", "4.8")
+        self.assertIn("黄浦区", hotel.full_address)
+        room = self.services.catalog.room_type("RT001")
+        self.assertEqual(room.area_sqm, 28)
+        self.assertIn("28㎡", room.short_spec)
+
+    def test_order_keeps_guests_and_arrival_time(self) -> None:
+        check_in = date.today() + timedelta(days=8)
+        order = self.services.booking.create_order(
+            guest_name="黄若希",
+            phone="13800000098",
+            hotel_id="H001",
+            room_type_id="RT001",
+            check_in=check_in,
+            check_out=check_in + timedelta(days=2),
+            qty=2,
+            pay_mode=PayMode.ONLINE,
+            arrival_time="预计 20:00 前",
+            guests=["李明", "李明", "王芳"],
+        )
+        stored = self.services.order_repo.require(order.order_no)
+        self.assertEqual(stored.arrival_time, "预计 20:00 前")
+        self.assertEqual(stored.guest_names, ["黄若希", "李明", "王芳"])
+        self.assertEqual(stored.guests_label, "黄若希、李明、王芳")
+
+    def test_short_guest_name_is_rejected(self) -> None:
+        check_in = date.today() + timedelta(days=8)
+        with self.assertRaises(ValidationError):
+            self.services.booking.create_order(
+                guest_name="黄若希",
+                phone="13800000097",
+                hotel_id="H001",
+                room_type_id="RT001",
+                check_in=check_in,
+                check_out=check_in + timedelta(days=1),
+                qty=2,
+                pay_mode=PayMode.ONLINE,
+                guests=["王"],
+            )
+
+
 class DomainModelTests(unittest.TestCase):
     """Pure domain helpers and enum labels."""
 

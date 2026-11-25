@@ -11,7 +11,7 @@ from ..domain.money import as_money, money_text
 from .database import Database
 from .security import hash_password
 
-HOTELS: list[dict[str, str]] = [
+HOTELS: list[dict[str, object]] = [
     {
         "hotel_id": "H001",
         "name": "云栖外滩酒店",
@@ -20,6 +20,8 @@ HOTELS: list[dict[str, str]] = [
         "address": "中山东一路 18 号",
         "franchise_type": "DIRECT",
         "phone": "021-6300-1001",
+        "star": 5,
+        "rating": "4.8",
     },
     {
         "hotel_id": "H002",
@@ -29,6 +31,8 @@ HOTELS: list[dict[str, str]] = [
         "address": "南京西路 1266 号",
         "franchise_type": "DIRECT",
         "phone": "021-6300-1002",
+        "star": 5,
+        "rating": "4.7",
     },
     {
         "hotel_id": "H003",
@@ -38,6 +42,8 @@ HOTELS: list[dict[str, str]] = [
         "address": "申长路 688 号",
         "franchise_type": "FRANCHISE",
         "phone": "021-6300-1003",
+        "star": 4,
+        "rating": "4.3",
     },
     {
         "hotel_id": "H004",
@@ -47,6 +53,8 @@ HOTELS: list[dict[str, str]] = [
         "address": "北山街 29 号",
         "franchise_type": "DIRECT",
         "phone": "0571-8800-2001",
+        "star": 5,
+        "rating": "4.9",
     },
     {
         "hotel_id": "H005",
@@ -56,6 +64,8 @@ HOTELS: list[dict[str, str]] = [
         "address": "江南大道 3850 号",
         "franchise_type": "FRANCHISE",
         "phone": "0571-8800-2002",
+        "star": 4,
+        "rating": "4.5",
     },
     {
         "hotel_id": "H006",
@@ -65,8 +75,16 @@ HOTELS: list[dict[str, str]] = [
         "address": "中山南路 88 号",
         "franchise_type": "DIRECT",
         "phone": "025-8600-3001",
+        "star": 4,
+        "rating": "4.6",
     },
 ]
+
+ROOM_AREA_BY_NAME: dict[str, int] = {
+    "高级大床房": 28,
+    "豪华双床房": 30,
+    "家庭套房": 46,
+}
 
 ROOM_TYPE_TEMPLATES: list[dict[str, object]] = [
     {
@@ -76,6 +94,7 @@ ROOM_TYPE_TEMPLATES: list[dict[str, object]] = [
         "breakfast": True,
         "base_price": "468.00",
         "total": 10,
+        "area_sqm": 28,
     },
     {
         "name": "豪华双床房",
@@ -84,6 +103,7 @@ ROOM_TYPE_TEMPLATES: list[dict[str, object]] = [
         "breakfast": True,
         "base_price": "568.00",
         "total": 8,
+        "area_sqm": 30,
     },
     {
         "name": "家庭套房",
@@ -92,6 +112,7 @@ ROOM_TYPE_TEMPLATES: list[dict[str, object]] = [
         "breakfast": True,
         "base_price": "788.00",
         "total": 6,
+        "area_sqm": 46,
     },
 ]
 
@@ -124,14 +145,43 @@ def seed_master_data(db: Database) -> None:
         _insert_staff(connection)
 
 
+def backfill_display_fields(db: Database, added: set[str]) -> None:
+    """Fill the display columns that older databases did not have.
+
+    SQLite cannot add a NOT NULL column with a per-row value, so the migrated
+    columns start with a constant default and are corrected here once, using
+    the same master data as a fresh seed.
+    """
+    if not added:
+        return
+    with db.transaction() as connection:
+        if "hotels.star" in added or "hotels.rating" in added:
+            for hotel in HOTELS:
+                connection.execute(
+                    "UPDATE hotels SET star = ?, rating = ? WHERE hotel_id = ?",
+                    (
+                        int(hotel["star"]),
+                        str(hotel["rating"]),
+                        hotel["hotel_id"],
+                    ),
+                )
+        if "room_types.area_sqm" in added:
+            for name, area in ROOM_AREA_BY_NAME.items():
+                connection.execute(
+                    "UPDATE room_types SET area_sqm = ? WHERE name = ?",
+                    (area, name),
+                )
+
+
 def _insert_hotels(connection: sqlite3.Connection) -> None:
     """Insert one block of seeded master data."""
     for hotel in HOTELS:
         connection.execute(
             """
             INSERT INTO hotels
-                (hotel_id, name, city, district, address, franchise_type, phone, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (hotel_id, name, city, district, address, franchise_type, phone,
+                 status, star, rating)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 hotel["hotel_id"],
@@ -142,6 +192,8 @@ def _insert_hotels(connection: sqlite3.Connection) -> None:
                 hotel["franchise_type"],
                 hotel["phone"],
                 HotelStatus.OPEN.value,
+                int(hotel["star"]),  # type: ignore[arg-type]
+                str(hotel["rating"]),
             ),
         )
 
@@ -162,8 +214,8 @@ def _insert_room_types_and_stock(
                 """
                 INSERT INTO room_types
                     (room_type_id, hotel_id, name, bed_type, capacity,
-                     breakfast, base_price, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                     breakfast, base_price, status, area_sqm)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     room_type_id,
@@ -174,6 +226,7 @@ def _insert_room_types_and_stock(
                     int(template["breakfast"]),  # type: ignore[arg-type]
                     money_text(base_price),
                     RoomTypeStatus.ON_SALE.value,
+                    int(template["area_sqm"]),  # type: ignore[arg-type]
                 ),
             )
             total = int(template["total"])  # type: ignore[arg-type]

@@ -42,6 +42,8 @@ class Hotel:
     franchise_type: str
     phone: str
     status: HotelStatus = HotelStatus.OPEN
+    star: int = 4
+    rating: Decimal = Decimal("4.6")
 
     @property
     def is_open(self) -> bool:
@@ -50,6 +52,11 @@ class Hotel:
     @property
     def type_label(self) -> str:
         return "直营店" if self.franchise_type == "DIRECT" else "加盟店"
+
+    @property
+    def full_address(self) -> str:
+        """City + district + street, the line shown on the room list header."""
+        return f"{self.city} · {self.district}{self.address}"
 
 
 @dataclass(slots=True)
@@ -64,10 +71,16 @@ class RoomType:
     breakfast: bool
     base_price: Decimal
     status: RoomTypeStatus = RoomTypeStatus.ON_SALE
+    area_sqm: int = 28
 
     @property
     def breakfast_label(self) -> str:
         return "含早" if self.breakfast else "不含早"
+
+    @property
+    def short_spec(self) -> str:
+        """One-line spec used on the room cards (``28㎡ · 1.8m 大床 · 含早``)."""
+        return f"{self.area_sqm}㎡ · {self.bed_type} · {self.breakfast_label}"
 
     @property
     def is_on_sale(self) -> bool:
@@ -265,15 +278,25 @@ class Order:
     contact_phone: str
     expire_at: datetime | None
     assigned_rooms: str = ""
+    arrival_time: str = ""
     version: int = 0
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     hotel_name: str = ""
     item: OrderItem | None = None
+    guest_names: list[str] = field(default_factory=list)
 
     @property
     def nights(self) -> int:
         return max((self.check_out - self.check_in).days, 0)
+
+    @property
+    def guests_label(self) -> str:
+        """Every registered guest of the order, contact first."""
+        names = [name for name in self.guest_names if name]
+        if self.contact_name and self.contact_name not in names:
+            names.insert(0, self.contact_name)
+        return "、".join(names) if names else self.contact_name
 
     @property
     def qty(self) -> int:

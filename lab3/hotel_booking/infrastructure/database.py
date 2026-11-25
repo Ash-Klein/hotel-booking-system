@@ -10,6 +10,18 @@ from typing import Any, Iterator, Sequence
 from .. import config
 from .schema import SCHEMA_SQL
 
+# Columns added after the first release. ``CREATE TABLE IF NOT EXISTS`` cannot
+# evolve an existing file, so the columns are appended here instead of asking
+# every reviewer to delete their demo database.
+_COLUMN_MIGRATIONS: dict[str, tuple[tuple[str, str], ...]] = {
+    "hotels": (
+        ("star", "INTEGER NOT NULL DEFAULT 4"),
+        ("rating", "TEXT NOT NULL DEFAULT '4.6'"),
+    ),
+    "room_types": (("area_sqm", "INTEGER NOT NULL DEFAULT 28"),),
+    "orders": (("arrival_time", "TEXT NOT NULL DEFAULT ''"),),
+}
+
 
 class Database:
     """Small connection factory around SQLite.
@@ -39,11 +51,31 @@ class Database:
         connection = self.connect()
         try:
             connection.executescript(SCHEMA_SQL)
+            added = self._migrate_columns(connection)
         finally:
             connection.close()
-        from .seed import seed_master_data
+        from .seed import backfill_display_fields, seed_master_data
 
         seed_master_data(self)
+        backfill_display_fields(self, added)
+
+    @staticmethod
+    def _migrate_columns(connection: sqlite3.Connection) -> set[str]:
+        """Append new columns to an existing database file."""
+        added: set[str] = set()
+        for table, columns in _COLUMN_MIGRATIONS.items():
+            existing = {
+                str(row["name"])
+                for row in connection.execute(f"PRAGMA table_info({table})")
+            }
+            for name, definition in columns:
+                if name in existing:
+                    continue
+                connection.execute(
+                    f"ALTER TABLE {table} ADD COLUMN {name} {definition}"
+                )
+                added.add(f"{table}.{name}")
+        return added
 
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:
