@@ -855,28 +855,30 @@ def chapter_six(doc: Document) -> None:
         doc,
         ["项目", "结果"],
         [
-            ["当前分支", "lab3（跟踪 origin/lab3）"],
+            ["当前分支", "lab3（本地；领先 origin/lab3 3 个提交）"],
             ["代码提交", "9a2328c  feat(lab3): 客人端改为独立 390x844 竖屏客户端"],
             ["上一提交", "3c50616  docs(lab3): 实验三报告、界面截图与生成脚本"],
             ["远程仓库", "https://github.com/Ash-Klein/hotel-booking-system"],
-            ["远程分支", "origin/lab3"],
+            ["远程分支", "origin/lab3：上一版 3c50616"],
             ["分支页面", "https://github.com/Ash-Klein/hotel-booking-system/tree/lab3"],
+            ["待推送", "9a2328c..b63e923；网络恢复后 git push origin lab3"],
         ],
         widths=[1.8, 4.6],
     )
     body(
         doc,
-        "推送过程中遇到过一次 HTTPS 凭据问题：Windows 的 schannel 后端报 "
-        "SEC_E_NO_CREDENTIALS，改用 OpenSSL 后端并绕过失效的本地代理后，"
-        "git push 成功创建远程分支 lab3。提交内容包含源码、测试、UML、截图、"
-        "README 与报告生成脚本。",
+        "之前已将 lab3 的初版源码和报告推送到 GitHub；本轮重做客人端时当前网络到 "
+        "GitHub 的连接中断（直连超时、代理 TLS 握手失败），因此 9a2328c 之后的"
+        "三个提交仍只在本地。网络恢复后执行 git push origin lab3 即可同步；"
+        "远端分支页面已保留上一版，提交内容不丢失。",
     )
     heading(doc, "6.2  版本管理检查", 2)
     body(
         doc,
         "提交前 git status 确认只含 lab3 源码与文档，data/、__pycache__/、*.db "
-        "被 .gitignore 排除；提交后 git log 确认 HEAD 与 origin/lab3 同步。"
-        "远程分支可在 GitHub 仓库的分支列表中看到。",
+        "被 .gitignore 排除；提交后 git log 确认 HEAD 指向 lab3。本次因网络中断，"
+        "HEAD 领先 origin/lab3 三个提交，恢复连接后执行一次 git push origin lab3 "
+        "即可同步，远程分支页面仍保留上一版。",
     )
     heading(doc, "6.3  总结", 2)
     body(
@@ -884,7 +886,7 @@ def chapter_six(doc: Document) -> None:
         "本实验完成了从 UML 到可运行系统的闭环：11 个核心实体、17 个领域类、"
         "7 个应用服务、7 个仓储、1 个竖屏客人端和 1 套桌面员工端，"
         "共 11,061 个有效源代码行；29 项测试全部通过，风格检查 0 问题；"
-        "代码已推送到 GitHub。",
+        "代码已提交到本地 lab3 分支，远程上一版已推送，最新提交待网络恢复后同步。",
     )
     body(
         doc,
