@@ -1,0 +1,17 @@
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pylint.messages_control]
+disable =
+    missing-function-docstring,
+    too-many-arguments,
+    too-many-positional-arguments,
+    too-many-locals,
+    too-many-instance-attributes,
+    too-many-branches,
+    too-many-statements,
+    too-few-public-methods,
+    duplicate-code
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

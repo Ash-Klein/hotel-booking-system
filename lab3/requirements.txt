@@ -1,0 +1,4 @@
+# The application uses only the Python 3.12 standard library.
+# Tkinter (tkinter) must be included with the Python installation.
+# Development-only screenshot generation needs Pillow; it is not required
+# to run the hotel booking application.

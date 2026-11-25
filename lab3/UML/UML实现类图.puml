@@ -1,0 +1,309 @@
+@startuml 实验三实现类图
+skinparam defaultFontName "Microsoft YaHei"
+skinparam dpi 160
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam roundCorner 8
+skinparam ArrowColor #1F3A5F
+skinparam ArrowFontColor #1F3A5F
+skinparam ArrowFontSize 10
+skinparam classBorderColor #1F3A5F
+skinparam classBackgroundColor #F7F9FC
+skinparam classHeaderBackgroundColor #DCE6F2
+skinparam classFontColor #1F3A5F
+skinparam classFontSize 12
+skinparam classAttributeFontSize 9
+skinparam classAttributeIconSize 0
+skinparam packageBorderColor #1F3A5F
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageFontColor #1F3A5F
+skinparam noteBackgroundColor #FFF8E1
+skinparam noteBorderColor #C9A227
+skinparam noteFontColor #5D4037
+skinparam nodesep 18
+skinparam ranksep 36
+title 图 4-1  酒店预订系统实现类图（领域 / 服务 / 仓储）
+
+package "domain 领域层" as DOMAIN {
+  class "Hotel 门店" as Hotel {
+    - hotelId : String
+    - name : String
+    - city : String
+    - status : HotelStatus
+    + isOpen() : boolean
+  }
+  class "RoomType 房型" as RoomType {
+    - roomTypeId : String
+    - name : String
+    - bedType : String
+    - capacity : int
+    - basePrice : Decimal
+    + isOnSale() : boolean
+  }
+  class "DailyInventory 每日库存" as DailyInventory {
+    - hotelId : String
+    - roomTypeId : String
+    - bizDate : Date
+    - total : int
+    - sold : int
+    - locked : int
+    - groupLocked : int
+    - version : int
+    + available() : int
+    + reserve(qty) : boolean
+    + release(qty) : void
+    + confirm(qty) : void
+    + lockGroup(qty) : boolean
+    + releaseGroup(qty) : void
+  }
+  class "DailyPrice 每日价格" as DailyPrice {
+    - bizDate : Date
+    - basePrice : Decimal
+    - finalPrice : Decimal
+  }
+  class "RoomClosure 关房记录" as RoomClosure {
+    - startDate : Date
+    - endDate : Date
+    - reason : String
+    + covers(date) : boolean
+  }
+  class "GroupLock 协议锁房" as GroupLock {
+    - startDate : Date
+    - endDate : Date
+    - qty : int
+    - releaseAt : DateTime
+    - status : GroupLockStatus
+    + isActive() : boolean
+  }
+  class "Guest 客人" as Guest {
+    - guestId : String
+    - name : String
+    - phone : String
+    + phoneMasked() : String
+  }
+  class "Order 订单" as Order {
+    - orderNo : String
+    - status : OrderStatus
+    - payMode : PayMode
+    - roomTypeName : String
+    - checkIn : Date
+    - checkOut : Date
+    - totalAmount : Decimal
+    - expireAt : DateTime
+    - version : int
+    + confirm() : void
+    + cancel() : void
+    + transitionTo(status) : void
+    + canTransition(status) : boolean
+    + isExpiredAt(now) : boolean
+  }
+  class "OrderItem 订单房明细" as OrderItem {
+    - qty : int
+    - cancelledQty : int
+    - unitPrice : Decimal
+    - firstNightPrice : Decimal
+    + activeQty() : int
+  }
+  class "Payment 支付流水" as Payment {
+    - paymentNo : String
+    - amount : Decimal
+    - method : String
+    - status : PaymentStatus
+  }
+  class "Refund 退款流水" as Refund {
+    - refundNo : String
+    - amount : Decimal
+    - status : RefundStatus
+    - approverId : String
+    - firstNightAmount : Decimal
+  }
+  class "Staff 员工" as Staff {
+    - staffId : String
+    - username : String
+    - role : Role
+    - hotelIds : List
+    + canAccessHotel(hotelId) : boolean
+  }
+  class "OperationLog 操作日志" as OperationLog {
+    - logId : long
+    - action : String
+    - beforeData : String
+    - afterData : String
+    - result : String
+  }
+  class "OrderChange 改单记录" as OrderChange {
+    - changeType : String
+    - amountDelta : Decimal
+  }
+  class "Cancellation 取消记录" as Cancellation {
+    - cancelledQty : int
+    - penalty : Decimal
+    - refundAmount : Decimal
+  }
+  class "ExceptionRecord 异常台账" as ExceptionRecord {
+    - exceptionType : ExceptionType
+    - description : String
+    - amount : Decimal
+    - status : ExceptionStatus
+  }
+  class "Room 房号" as Room {
+    - roomNo : String
+    - status : RoomStatus
+  }
+}
+
+package "application 应用服务层" as APP {
+  class "AuthService 认证" as AuthService {
+    + login(username, password) : Staff
+  }
+  class "CatalogService 查询报价" as CatalogService {
+    + search(...) : List~SearchResult~
+    + quote(...) : Quote
+  }
+  class "BookingService 预订交易" as BookingService {
+    + createOrder(...) : Order
+    + payOrder(orderNo) : Order
+    + confirmAtHotel(orderNo, staff) : Order
+    + cancelOrder(...) : Dict
+    + modifyOrder(...) : Dict
+    + cancelExpired(now) : int
+  }
+  class "FulfillmentService 履约" as FulfillmentService {
+    + checkIn(orderNo, rooms, staff) : Order
+    + checkOut(orderNo, staff) : Dict
+    + markNoShow(orderNo, staff) : Order
+    + markException(...) : ExceptionRecord
+    + resolveException(...) : Order
+    + runNightAudit(...) : Dict
+  }
+  class "InventoryAdminService 库存管理" as InventoryAdminService {
+    + setPrice(...) : void
+    + closeRooms(...) : RoomClosure
+    + correctTotal(...) : void
+    + createGroupLock(...) : GroupLock
+    + releaseGroupLock(...) : void
+  }
+  class "RefundService 退款审批" as RefundService {
+    + pendingRefunds(staff) : List~Refund~
+    + decide(refundNo, staff, approve) : Refund
+  }
+  class "ReportingService 报表" as ReportingService {
+    + dashboard(staff, hotelId) : DashboardStats
+    + hotelReport(start, end, staff) : List~ReportRow~
+    + exportHotelReport(...) : Path
+  }
+}
+
+package "repositories 仓储与基础设施" as REPO {
+  class "Database 事务管理" as Database {
+    + initialize() : void
+    + transaction() : ContextManager
+    + query(sql, params) : List~Row~
+  }
+  class "CatalogRepository" as CatalogRepository
+  class "InventoryRepository" as InventoryRepository {
+    + lockRooms(...) : void
+    + confirmLocked(...) : void
+    + releaseSold(...) : void
+  }
+  class "OrderRepository" as OrderRepository {
+    + insertOrder(...) : void
+    + updateOrder(...) : void
+    + addRefund(...) : void
+    + search(...) : List~Order~
+  }
+  class "StaffRepository" as StaffRepository
+  class "AuditRepository" as AuditRepository {
+    + write(...) : void
+    + listLogs(...) : List~OperationLog~
+  }
+  class "ReportingRepository" as ReportingRepository
+}
+
+package "ui 表现层" as UI {
+  class "HotelBookingApp" as HotelBookingApp
+  class "LoginView" as LoginView
+  class "GuestPortal" as GuestPortal
+  class "StaffShell" as StaffShell
+  class "AdminShell" as AdminShell
+}
+
+Hotel "1" -- "*" RoomType : 拥有
+RoomType "1" -- "*" DailyInventory : 按日核算
+RoomType "1" -- "*" DailyPrice : 每日报价
+RoomType "1" -- "*" RoomClosure : 关房
+RoomType "1" -- "*" GroupLock : 协议锁房
+Hotel "1" -- "*" Room : 物理房号
+RoomType "1" -- "*" Room : 归类
+
+Guest "1" -- "*" Order : 下单
+Order "1" *-- "1..*" OrderItem : 包含
+Order "1" -- "*" Payment : 支付
+Order "1" -- "*" Refund : 退款
+Order "1" -- "*" OrderChange : 改单
+Order "1" -- "*" Cancellation : 取消
+Order "1" -- "0..1" ExceptionRecord : 异常
+
+Staff "1" -- "*" OperationLog : 操作
+Staff "1" -- "*" OrderChange : 执行
+Staff "1" -- "*" Cancellation : 执行
+
+BookingService ..> CatalogService : 复用报价
+BookingService ..> InventoryRepository : 锁房/确认/释放
+BookingService ..> OrderRepository : 订单持久化
+BookingService ..> AuditRepository : 留痕
+FulfillmentService ..> BookingService : 超时取消
+FulfillmentService ..> InventoryRepository
+FulfillmentService ..> OrderRepository
+FulfillmentService ..> AuditRepository
+InventoryAdminService ..> CatalogRepository
+InventoryAdminService ..> InventoryRepository
+InventoryAdminService ..> AuditRepository
+RefundService ..> OrderRepository
+RefundService ..> AuditRepository
+ReportingService ..> ReportingRepository
+ReportingService ..> OrderRepository
+ReportingService ..> InventoryRepository
+CatalogService ..> CatalogRepository
+CatalogService ..> InventoryRepository
+AuthService ..> StaffRepository
+AuthService ..> AuditRepository
+Database <.. CatalogRepository
+Database <.. InventoryRepository
+Database <.. OrderRepository
+Database <.. StaffRepository
+Database <.. AuditRepository
+Database <.. ReportingRepository
+
+APP ..> DOMAIN : 使用领域对象
+REPO ..> DOMAIN : 映射持久化
+UI ..> APP : 调用用例
+UI ..> REPO : 组合根注入
+
+note bottom of DailyInventory
+  <b>唯一键</b> (hotelId, roomTypeId, bizDate)
+  available = total - sold - locked - groupLocked ≥ 0
+  条件 UPDATE 在数据库层重新校验可售量，
+  因此并发抢最后一间时只有一单成功。
+end note
+
+note bottom of Order
+  状态：待支付 / 已确认待入住 / 已入住 / 正常离店 /
+  已取消 / 客人未到店 / 异常订单。
+  允许转换集中在 ORDER_TRANSITIONS，非法转换抛
+  StateTransitionError 并写入操作日志。
+end note
+
+note bottom of Refund
+  审批基数取订单首晚实际成交价；
+  > 500 元进入 PENDING_APPROVAL，
+  否则自动通过。异常订单裁决可强制全额退款。
+end note
+
+note right of UI
+  源代码规模：约 1.09 万有效行（不含第三方库），
+  其中 Tkinter 界面约 4,200 行，
+  领域 / 服务 / 仓储 / 基础设施约 6,700 行。
+end note
+
+@enduml

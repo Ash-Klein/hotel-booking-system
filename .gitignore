@@ -55,3 +55,12 @@ lab2/*.zip
 # Python 缓存
 __pycache__/
 *.pyc
+
+# ===== 实验三（源代码需要入库，覆盖上面的全局 *.py） =====
+!lab3/**/*.py
+!lab3/*.py
+!lab3/tools/*.py
+lab3/data/
+lab3/.test_tmp/
+lab3/.tmppip/
+

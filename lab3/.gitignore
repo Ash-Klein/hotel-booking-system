@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Runtime SQLite databases
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Local tooling and scratch output
+.tmp*/
+.tmppip/
+.test_tmp/
+tools/pylibs/
+report/*.docx
+
+# OS
+Thumbs.db
+.DS_Store
